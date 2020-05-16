@@ -1,9 +1,21 @@
 #!/bin/bash
 
 set -e
+
+# replace password placeholder with real aws password from stdin
+awk '{sub(/_password_/,'\"$2\"')}1' rds_config.py > temp.py && mv temp.py rds_config.py
+
+# zipping
 rm function.zip || true
 cd v-env/lib/python3.7/site-packages/
 zip -r9 ../../../../function.zip .
 cd ../../../../
-zip -R function.zip "*.py" -x v-env/\*
-aws lambda update-function-code --function-name items --zip-file fileb://function.zip
+zip -g function.zip rds_config.py
+zip -g function.zip "$1_lambda_function.py"
+zip -R function.zip "$1_service/*.py" -x v-env/\*
+
+# update aws lambda
+aws lambda update-function-code --function-name $1 --zip-file fileb://function.zip
+
+# reset password to placeholder
+awk '{sub(/'$2'/,"_password_")}1' rds_config.py > temp.py && mv temp.py rds_config.py

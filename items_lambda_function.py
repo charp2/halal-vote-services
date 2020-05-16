@@ -6,7 +6,7 @@ import json
 
 # our imports
 import rds_config
-from services.make_item import make_item
+from items_service.make_item import make_item
 
 # rds settings
 rds_host  = rds_config.db_host

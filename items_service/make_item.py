@@ -1,5 +1,6 @@
 def make_item(data, conn, logger):
     logger.info("make_item incoming data: %s", data)
+    print("new updateFunctionWorked")
 
     # Access DB
     with conn.cursor() as cur:
