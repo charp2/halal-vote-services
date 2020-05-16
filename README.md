@@ -9,12 +9,16 @@ This library contains code for a lambda function which gets invoked by an AWS AP
 
 The updateFunction script contains a series of bash commands which will update the lambda on aws. In order for this script to work, you must have installed PyMySql by following the instructions below:
 
-`~/make-item$ python3 -m venv v-env` 
+`~/halal-vote-services$ python3 -m venv v-env` 
 
-`~/make-item$ source v-env/bin/activate` 
+`~/halal-vote-services$ source v-env/bin/activate` 
 
-`~/make-item$ pip3 install PyMySql`
+`~/halal-vote-services$ pip3 install PyMySql`
 
-Now you can run ~/make-item$ ./updateFunction anytime code is updated.
+Now you can run `~/halal-vote-services$ ./updateFunction {service} {aws_password}` anytime code is updated.
+
+Note that the updateFunction script takes two arguments- 
+1) The name of the lambda you want to update (`items` or `users`)
+2) The aws password for a user account which has permission to update the lambda
 
 *MAKE SURE YOU GIVE THE updateFunction SCRIPT PERSMISSION TO EXECUTE BY RUNNING `chmod +x ./updateFunction`*
