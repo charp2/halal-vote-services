@@ -10,7 +10,9 @@ This library contains code for a lambda function which gets invoked by an AWS AP
 The updateFunction script contains a series of bash commands which will update the lambda on aws. In order for this script to work, you must have installed PyMySql by following the instructions below:
 
 `~/make-item$ python3 -m venv v-env` 
+
 `~/make-item$ source v-env/bin/activate` 
+
 `~/make-item$ pip3 install PyMySql`
 
 Now you can run ~/make-item$ ./updateFunction anytime code is updated.
