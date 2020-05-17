@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from items_service.make_item import make_item
+from items_service.delete_item import delete_item
 from common.user_auth import valid_user
 
 # rds settings
@@ -29,6 +30,20 @@ except pymysql.MySQLError as e:
 logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 # lambda entry point
+# event: {
+#     "resource": "Resource path",
+#     "path": "Path parameter",
+#     "httpMethod": "Incoming request's method name"
+#     "headers": {String containing incoming request headers}
+#     "multiValueHeaders": {List of strings containing incoming request headers}
+#     "queryStringParameters": {query string parameters }
+#     "multiValueQueryStringParameters": {List of query string parameters}
+#     "pathParameters":  {path parameters}
+#     "stageVariables": {Applicable stage variables}
+#     "requestContext": {Request context, including authorizer-returned key-value pairs}
+#     "body": "A JSON string of the request payload."
+#     "isBase64Encoded": "A boolean flag to indicate if the applicable request payload is Base64-encode"
+# }
 def handler(event, context):
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
@@ -42,6 +57,8 @@ def handler(event, context):
 
     if (event['path'] == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)
+    elif (event['path'] == '/delete-item'):
+        responseStatus, responseBody = delete_item(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
