@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from users_service.register_user import register_user
+from common.user_auth import valid_user
 
 # rds settings
 rds_host  = rds_config.db_host
@@ -17,6 +18,9 @@ db_name = rds_config.db_name
 # logging config
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+# apis not requiring sessionToken
+no_session_token = ["/register-user", "/login"]
 
 # verify db connection
 try:
@@ -29,10 +33,20 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 # lambda entry point
 def handler(event, context):
-    body = json.loads(event['body'])
+    path = event['path']
+    requestBody = json.loads(event['body'])
+    requestHeaders = event['headers']
 
-    if (event['path'] == '/register-user'):
-        responseStatus, responseBody = register_user(body, conn, logger)
+    if path not in no_session_token:
+        is_valid_user = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
+
+        if not isinstance(is_valid_user, bool):
+            return {'statusCode': 500, 'body': is_valid_user}
+        elif not is_valid_user:
+            return { 'statusCode': 401, 'body': 'User Not Authorized' }
+
+    if (path == '/register-user'):
+        responseStatus, responseBody = register_user(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
