@@ -1,4 +1,5 @@
 from secrets import token_hex
+from hashlib import sha256
 
 dataType = {
     "username": str,
@@ -6,10 +7,9 @@ dataType = {
 }
 
 def register_user(data: dataType, conn, logger):
-    salt = token_hex(10)
-
     username = data["username"]
     password = data["password"]
+    salt = token_hex(10)
 
     if not username:
         error_message = "Invalid username passed in"
@@ -21,9 +21,13 @@ def register_user(data: dataType, conn, logger):
         logger.error(error_message)
         return 500, error_message
 
+    salted_password = password + salt
+    hashed_password = sha256(str.encode(salted_password)).hexdigest()
+    logger.info(hashed_password)
+
     try:
         with conn.cursor() as cur:
-            cur.execute("insert into Users (username, password, salt, activeStatus) values('%s', '%s', '%s', 'INACTIVE')" %(data["username"], data["password"], salt))
+            cur.execute("insert into Users (username, password, salt, activeStatus) values('%s', '%s', '%s', 'INACTIVE')" %(username, hashed_password, salt))
             conn.commit()
     except Exception as e:
         error_str = str(e)
