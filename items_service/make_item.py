@@ -1,9 +1,9 @@
 
-# data: {
-#     "itemName": str,
-#     "username": str
-# }
-def make_item(data, conn, logger):
+dataType = {
+    "itemName": str,
+    "username": str
+}
+def make_item(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
