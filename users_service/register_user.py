@@ -1,6 +1,11 @@
 from secrets import token_hex
 
-def register_user(data, conn, logger):
+dataType = {
+    "username": str,
+    "password": str
+}
+
+def register_user(data: dataType, conn, logger):
     salt = token_hex(10)
 
     username = data["username"]
