@@ -48,9 +48,12 @@ def handler(event, context):
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
 
-    if not valid_user(requestBody['username'], requestHeaders['sessionToken']):
+    is_valid_user = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
+
+    if not isinstance(is_valid_user, bool):
+        return {'statusCode': 500, 'body': is_valid_user}
+    elif not is_valid_user:
         return { 'statusCode': 401, 'body': 'User Not Authorized' }
-    
 
     if (event['path'] == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)
