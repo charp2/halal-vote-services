@@ -21,6 +21,9 @@ db_name = rds_config.db_name
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# apis not requiring sessionToken
+no_session_token = ["/get-items"]
+
 # verify db connection
 try:
     conn = pymysql.connect(rds_host, user=name, passwd=password, db=db_name, connect_timeout=5)
@@ -47,21 +50,23 @@ eventType = {
 }
 # lambda entry point
 def handler(event: eventType, context):
+    path = event['path']
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
 
     is_valid_user = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
 
-    if not isinstance(is_valid_user, bool):
-        return {'statusCode': 500, 'body': is_valid_user}
-    elif not is_valid_user:
-        return { 'statusCode': 401, 'body': 'User Not Authorized' }
+    if path not in no_session_token:
+        if not isinstance(is_valid_user, bool):
+            return {'statusCode': 500, 'body': is_valid_user}
+        elif not is_valid_user:
+            return { 'statusCode': 401, 'body': 'User Not Authorized' }
 
-    if (event['path'] == '/make-item'):
+    if (path == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)
-    elif (event['path'] == '/delete-items'):
+    elif (path == '/delete-items'):
         responseStatus, responseBody = delete_items(requestBody, conn, logger)
-    elif (event['path'] == '/get-items'):
+    elif (path == '/get-items'):
         responseStatus, responseBody = get_items(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
