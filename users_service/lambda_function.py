@@ -33,8 +33,22 @@ except pymysql.MySQLError as e:
     sys.exit()
 logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
+eventType = {
+    "resource": str,
+    "path": str,
+    "httpMethod": str,
+    "headers": dict,
+    "multiValueHeaders": any, #{List of strings containing incoming request headers}
+    "queryStringParameters": any, #{query string parameters }
+    "multiValueQueryStringParameters": any, #{List of query string parameters}
+    "pathParameters": any, #{path parameters}
+    "stageVariables": any, #{Applicable stage variables}
+    "requestContext": any, #{Request context, including authorizer-returned key-value pairs}
+    "body": str,
+    "isBase64Encoded": any, #"A boolean flag to indicate if the applicable request payload is Base64-encode"
+}
 # lambda entry point
-def handler(event, context):
+def handler(event: eventType, context):
     path = event['path']
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
