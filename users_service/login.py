@@ -15,7 +15,7 @@ def login(data: dataType, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select password, salt, sessionToken from Users where username='%s'" %(username))
+            cur.execute("select password, salt, sessionToken from Users where username=%(username)s", {'username': username})
             fetched_password, fetched_salt, session_token = cur.fetchone()
 
             check_hash = create_hashed_password(password, fetched_salt)
@@ -26,7 +26,7 @@ def login(data: dataType, conn, logger):
                 else:
                     new_session_token = session_token
 
-                cur.execute("update Users set sessionToken='%s' where username='%s'" %(new_session_token, username))
+                cur.execute("update Users set sessionToken=%(sessionToken)s where username=%(username)s", {'sessionToken': new_session_token, 'username': username})
                 conn.commit()
 
                 return 200, new_session_token

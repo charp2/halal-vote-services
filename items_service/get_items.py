@@ -2,9 +2,9 @@ import json
 import pymysql
 
 dataType = {
-    "itemNames": [str],
-    "username": str
+    "itemNames": [str]
 }
+
 def get_items(data: dataType, conn, logger):
     # Access DB
     try:

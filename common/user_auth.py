@@ -14,7 +14,7 @@ def valid_user(username, session_token, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select sessionToken from Users where username='%s'" %(username))
+            cur.execute("select sessionToken from Users where username=%(username)s", {'username': username})
             retrieved_session_token = cur.fetchone()[0]
             return session_token == retrieved_session_token
 
