@@ -7,7 +7,7 @@ def make_item(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
-            cur.execute('insert into Items (itemName, username, halalVotes, haramVotes, numComments) values("%s", "%s", 0, 0, 0)' %(data['itemName'], data['username']))
+            cur.execute('insert into Items (itemName, username, halalVotes, haramVotes, numComments) values(%(itemName)s, %(username)s, 0, 0, 0)', {'itemName': data['itemName'], 'username': data['username']})
         conn.commit()
     except Exception as e:
         error_str = str(e)
