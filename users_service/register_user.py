@@ -1,5 +1,8 @@
+# standard python imports
 from secrets import token_hex
-from hashlib import sha256
+
+# our imports
+from common.user_auth import create_hashed_password
 
 dataType = {
     "username": str,
@@ -21,8 +24,7 @@ def register_user(data: dataType, conn, logger):
         logger.error(error_message)
         return 500, error_message
 
-    salted_password = password + salt
-    hashed_password = sha256(str.encode(salted_password)).hexdigest()
+    hashed_password = create_hashed_password(password, salt)
     logger.info(hashed_password)
 
     try:
@@ -34,6 +36,6 @@ def register_user(data: dataType, conn, logger):
         logger.error(error_str)
         return 500, error_str
 
-    success_message = "Added User '%s' into Users table" %(data['username'])
+    success_message = "Added User '%s' into Users table" %(username)
     logger.info(success_message)
     return 200, success_message

@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from users_service.register_user import register_user
+from users_service.login import login
 from common.user_auth import valid_user
 
 # rds settings
@@ -45,8 +46,10 @@ def handler(event, context):
         elif not is_valid_user:
             return { 'statusCode': 401, 'body': 'User Not Authorized' }
 
-    if (path == '/register-user'):
+    if path == '/register-user':
         responseStatus, responseBody = register_user(requestBody, conn, logger)
+    elif path == '/login':
+        responseStatus, responseBody = login(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
