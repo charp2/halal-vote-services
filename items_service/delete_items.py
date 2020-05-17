@@ -3,7 +3,7 @@ dataType = {
     "itemNames": [str],
     "username": str
 }
-def delete_item(data: dataType, conn, logger):
+def delete_items(data: dataType, conn, logger):
     # Access DB
     try:
         itemsToDelete = ",".join(map(lambda x: '"%s"' %(x), data['itemNames']))

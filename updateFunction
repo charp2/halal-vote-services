@@ -11,8 +11,6 @@ cd v-env/lib/python3.7/site-packages/
 zip -r9 ../../../../function.zip .
 cd ../../../../
 zip -g function.zip rds_config.py
-zip -g function.zip "$1_lambda_function.py"
-zip -R function.zip "$1_service/*.py"
 zip -R function.zip "$1_service/*.py"
 zip -R function.zip "common/*.py"
 
