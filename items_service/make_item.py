@@ -1,3 +1,8 @@
+
+# data: {
+#     "itemName": str,
+#     "username": str
+# }
 def make_item(data, conn, logger):
     # Access DB
     try:
