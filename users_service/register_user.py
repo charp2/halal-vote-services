@@ -1,8 +1,6 @@
 from secrets import token_hex
 
 def register_user(data, conn, logger):
-    logger.info("register_user incoming data: %s", data)
-
     salt = token_hex(10)
 
     try:
