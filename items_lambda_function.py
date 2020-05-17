@@ -29,22 +29,23 @@ except pymysql.MySQLError as e:
     sys.exit()
 logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
+
+eventType = {
+    "resource": str,
+    "path": str,
+    "httpMethod": str,
+    "headers": dict,
+    "multiValueHeaders": any, #{List of strings containing incoming request headers}
+    "queryStringParameters": any, #{query string parameters }
+    "multiValueQueryStringParameters": any, #{List of query string parameters}
+    "pathParameters": any, #{path parameters}
+    "stageVariables": any, #{Applicable stage variables}
+    "requestContext": any, #{Request context, including authorizer-returned key-value pairs}
+    "body": str,
+    "isBase64Encoded": any, #"A boolean flag to indicate if the applicable request payload is Base64-encode"
+}
 # lambda entry point
-# event: {
-#     "resource": "Resource path",
-#     "path": "Path parameter",
-#     "httpMethod": "Incoming request's method name"
-#     "headers": {String containing incoming request headers}
-#     "multiValueHeaders": {List of strings containing incoming request headers}
-#     "queryStringParameters": {query string parameters }
-#     "multiValueQueryStringParameters": {List of query string parameters}
-#     "pathParameters":  {path parameters}
-#     "stageVariables": {Applicable stage variables}
-#     "requestContext": {Request context, including authorizer-returned key-value pairs}
-#     "body": "A JSON string of the request payload."
-#     "isBase64Encoded": "A boolean flag to indicate if the applicable request payload is Base64-encode"
-# }
-def handler(event, context):
+def handler(event: eventType, context):
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
 
