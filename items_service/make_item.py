@@ -11,4 +11,4 @@ def make_item(data, conn, logger):
 
     success_message = "Added Item '%s' into Items table" %(data['itemName'])
     logger.info(success_message)
-    return success_message
+    return 200, success_message
