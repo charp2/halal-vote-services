@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from items_service.make_item import make_item
+from common.user_auth import valid_user
 
 # rds settings
 rds_host  = rds_config.db_host
@@ -30,7 +31,15 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 # lambda entry point
 def handler(event, context):
     requestBody = json.loads(event['body'])
+    requestHeaders = event['headers']
 
-    responseStatus, responseBody = make_item(requestBody, conn, logger)
+    if not valid_user(requestBody['username'], requestHeaders['sessionToken']):
+        return { 'statusCode': 401, 'body': 'User Not Authorized' }
+    
+
+    if (event['path'] == '/make-item'):
+        responseStatus, responseBody = make_item(requestBody, conn, logger)
+    else:
+        responseStatus, responseBody = 404, "No path found..."
 
     return { 'statusCode': responseStatus, 'body': responseBody }
