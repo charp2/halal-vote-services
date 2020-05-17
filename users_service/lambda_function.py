@@ -8,6 +8,7 @@ import json
 import rds_config
 from users_service.register_user import register_user
 from users_service.login import login
+from users_service.logout import logout
 from common.user_auth import valid_user
 
 # rds settings
@@ -21,7 +22,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/login"]
+no_session_token = ["/register-user", "/login", "logout"]
 
 # verify db connection
 try:
@@ -50,6 +51,8 @@ def handler(event, context):
         responseStatus, responseBody = register_user(requestBody, conn, logger)
     elif path == '/login':
         responseStatus, responseBody = login(requestBody, conn, logger)
+    elif path == '/logout':
+        responseStatus, responseBody = logout(requestBody, requestHeaders['sessionToken'], conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
