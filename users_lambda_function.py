@@ -31,6 +31,9 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 def handler(event, context):
     body = json.loads(event['body'])
 
-    responseStatus, responseBody = register_user(body, conn, logger)
+    if (event['path'] == '/register-user'):
+        responseStatus, responseBody = register_user(body, conn, logger)
+    else:
+        responseStatus, responseBody = 404, "No path found..."
 
     return {'statusCode': responseStatus, 'body': responseBody}
