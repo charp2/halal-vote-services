@@ -55,11 +55,10 @@ def handler(event: eventType, context):
     requestHeaders = event['headers']
 
     if path not in no_session_token:
-        is_valid_user = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
-        if not isinstance(is_valid_user, bool):
-            return {'statusCode': 500, 'body': is_valid_user}
-        elif not is_valid_user:
-            return { 'statusCode': 401, 'body': 'User Not Authorized' }
+        status_code, msg = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
+
+        if status_code != 200:
+            return {'statusCode': status_code, 'body': msg}
 
     if (path == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)

@@ -4,27 +4,27 @@ import logging
 # logging config
 logger = logging.getLogger()
 
-def valid_user(username, session_token, conn, logger):
+def valid_user(username: str, session_token: str, conn, logger):
     if not username:
-        error_message = "Invalid username passed in"
-        logger.error(error_message)
-        return error_message
+        return generate_error_response(500, "Invalid username passed in")
 
     if not session_token:
-        error_message = "Invalid sessionToken passed in"
-        logger.error(error_message)
-        return error_message
+        return generate_error_response(500, "Invalid sessionToken passed in")
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select sessionToken from Users where username=%(username)s", {'username': username})
-            retrieved_session_token = cur.fetchone()[0]
-            return session_token == retrieved_session_token
+            cur.execute("select sessionToken, activeStatus from Users where username=%(username)s", {'username': username})
+            retrieved_session_token, active_status = cur.fetchone()
+
+            if active_status != "ACTIVE":
+                return generate_error_response(403, "User is Not ACTIVE")
+            elif session_token != retrieved_session_token:
+                return generate_error_response(401, "User Not Authorized")
+            else:
+                return generate_success_response("")
 
     except Exception as e:
-        error_str = str(e)
-        logger.error(error_str)
-        return error_str
+        return generate_error_response(500, str(e))
 
 def generate_error_response(status_code: int, error_msg: str):
     logger.error(error_msg)
