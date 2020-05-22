@@ -9,7 +9,7 @@ import rds_config
 from items_service.make_item import make_item
 from items_service.delete_items import delete_items
 from items_service.get_items import get_items
-from common.user_auth import valid_user
+from utils import valid_user
 
 # rds settings
 rds_host  = rds_config.db_host

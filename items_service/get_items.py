@@ -1,6 +1,11 @@
+# standard python imports
 import sys
 import json
 import pymysql
+
+# our imports
+from utils import generate_error_response
+from utils import generate_success_response
 
 dataType = {
     'itemNames': [str],
@@ -21,11 +26,8 @@ def get_items(data: dataType, conn, logger):
                 result = cur.fetchall()
         conn.commit()
     except Exception as e:
-        error_str = str(e)
-        logger.error(error_str)
-        return 500, error_str
+        return generate_error_response(500, str(e))
 
     responseBody = json.dumps(result, default=str)
 
-    logger.info("Retreived Items '%s' from Items table" %(responseBody))
-    return 200, responseBody
+    return generate_success_response("Retreived Items '%s' from Items table" %(responseBody))

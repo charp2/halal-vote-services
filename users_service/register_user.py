@@ -3,8 +3,8 @@ from secrets import token_hex
 
 # our imports
 from users_service.utils import create_hashed_password
-from users_service.utils import generate_error_response
-from users_service.utils import generate_success_response
+from utils import generate_error_response
+from utils import generate_success_response
 
 dataType = {
     "email": str,

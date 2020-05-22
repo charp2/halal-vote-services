@@ -12,7 +12,7 @@ zip -r9 ../../../../function.zip .
 cd ../../../../
 zip -g function.zip rds_config.py
 zip -R function.zip "$1_service/*.py"
-zip -R function.zip "common/*.py"
+zip -R function.zip utils.py
 
 # update aws lambda
 aws lambda update-function-code --function-name $1 --zip-file fileb://function.zip

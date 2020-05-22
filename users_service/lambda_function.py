@@ -10,7 +10,7 @@ from users_service.register_user import register_user
 from users_service.activate_user import activate_user
 from users_service.login import login
 from users_service.logout import logout
-from common.user_auth import valid_user
+from utils import valid_user
 
 # rds settings
 rds_host  = rds_config.db_host

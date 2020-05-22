@@ -1,3 +1,6 @@
+# our imports
+from utils import generate_error_response
+from utils import generate_success_response
 
 dataType = {
     "itemNames": [str],
@@ -11,10 +14,6 @@ def delete_items(data: dataType, conn, logger):
             cur.execute('delete from Items where itemName in (%s)' %(itemsToDelete))
         conn.commit()
     except Exception as e:
-        error_str = str(e)
-        logger.error(error_str)
-        return 500, error_str
+        return generate_error_response(500, str(e))
 
-    success_message = "Removed Item '%s' from Items table" %(data['itemNames'])
-    logger.info(success_message)
-    return 200, success_message
+    return generate_success_response("Removed Item '%s' from Items table" %(data['itemNames']))
