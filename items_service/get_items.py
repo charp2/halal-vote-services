@@ -7,6 +7,7 @@ dataType = {
     'n': int,
     'offset': int
 }
+
 def get_items(data: dataType, conn, logger):
     # Access DB
     try:

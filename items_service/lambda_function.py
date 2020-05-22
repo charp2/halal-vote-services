@@ -56,7 +56,6 @@ def handler(event: eventType, context):
 
     if path not in no_session_token:
         is_valid_user = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
-
         if not isinstance(is_valid_user, bool):
             return {'statusCode': 500, 'body': is_valid_user}
         elif not is_valid_user:

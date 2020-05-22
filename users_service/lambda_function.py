@@ -7,6 +7,8 @@ import json
 # our imports
 import rds_config
 from users_service.register_user import register_user
+from users_service.login import login
+from users_service.logout import logout
 from common.user_auth import valid_user
 
 # rds settings
@@ -20,7 +22,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/login"]
+no_session_token = ["/register-user", "/login", "logout"]
 
 # verify db connection
 try:
@@ -31,8 +33,22 @@ except pymysql.MySQLError as e:
     sys.exit()
 logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
+eventType = {
+    "resource": str,
+    "path": str,
+    "httpMethod": str,
+    "headers": dict,
+    "multiValueHeaders": any, #{List of strings containing incoming request headers}
+    "queryStringParameters": any, #{query string parameters }
+    "multiValueQueryStringParameters": any, #{List of query string parameters}
+    "pathParameters": any, #{path parameters}
+    "stageVariables": any, #{Applicable stage variables}
+    "requestContext": any, #{Request context, including authorizer-returned key-value pairs}
+    "body": str,
+    "isBase64Encoded": any, #"A boolean flag to indicate if the applicable request payload is Base64-encode"
+}
 # lambda entry point
-def handler(event, context):
+def handler(event: eventType, context):
     path = event['path']
     requestBody = json.loads(event['body'])
     requestHeaders = event['headers']
@@ -45,8 +61,12 @@ def handler(event, context):
         elif not is_valid_user:
             return { 'statusCode': 401, 'body': 'User Not Authorized' }
 
-    if (path == '/register-user'):
+    if path == '/register-user':
         responseStatus, responseBody = register_user(requestBody, conn, logger)
+    elif path == '/login':
+        responseStatus, responseBody = login(requestBody, conn, logger)
+    elif path == '/logout':
+        responseStatus, responseBody = logout(requestBody, requestHeaders['sessionToken'], conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
