@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from users_service.register_user import register_user
+from users_service.activate_user import activate_user
 from users_service.login import login
 from users_service.logout import logout
 from common.user_auth import valid_user
@@ -19,10 +20,9 @@ db_name = rds_config.db_name
 
 # logging config
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/login", "logout"]
+no_session_token = ["/register-user", "/activate-user", "/login", "/logout"]
 
 # verify db connection
 try:
@@ -50,7 +50,12 @@ eventType = {
 # lambda entry point
 def handler(event: eventType, context):
     path = event['path']
-    requestBody = json.loads(event['body'])
+
+    if event['httpMethod'] == 'POST':
+        requestBody = json.loads(event['body'])
+    elif event['httpMethod'] == 'GET':
+        requestParams = event['queryStringParameters']
+
     requestHeaders = event['headers']
 
     if path not in no_session_token:
@@ -63,6 +68,10 @@ def handler(event: eventType, context):
 
     if path == '/register-user':
         responseStatus, responseBody = register_user(requestBody, conn, logger)
+    elif path == '/activate-user':
+        username = requestParams['username']
+        value = requestParams['value']
+        responseStatus, responseBody = activate_user(username, value, conn, logger)
     elif path == '/login':
         responseStatus, responseBody = login(requestBody, conn, logger)
     elif path == '/logout':

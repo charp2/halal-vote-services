@@ -2,7 +2,9 @@
 from secrets import token_hex
 
 # our imports
-from common.user_auth import create_hashed_password
+from users_service.utils import create_hashed_password
+from users_service.utils import generate_error_response
+from users_service.utils import generate_success_response
 
 dataType = {
     "username": str
@@ -17,31 +19,18 @@ def logout(data: dataType, session_token, conn, logger):
             fetched_session_token = cur.fetchone()[0]
 
             if fetched_session_token:
-
                 if fetched_session_token == session_token:
-                    cur.execute("update Users set sessionToken=%(sessionToken)s where username=%(username)s", {'sessionToken': None, 'username': username})
+                    cur.execute("update Users set sessionToken=%(sessionToken)s, sessionTimestamp=%(sessionTimestamp)s where username=%(username)s", {'sessionToken': None, 'sessionTimestamp': None, 'username': username})
                     conn.commit()
 
-                    response_str = "Successfully logged out"
-                    logger.error(response_str)
-                    return 200, response_str
+                    return generate_success_response("Successfully logged out")
 
                 else:
-                    error_str = "User Not Authorized"
-                    logger.error(error_str)
-                    return 401, error_str
+                    return generate_error_response(401, "User Not Authorized")
 
             else:
-                response_str = "Already logged out"
-                logger.error(response_str)
-                return 200, response_str
+                return generate_success_response("Already logged out")
 
 
     except Exception as e:
-        error_str = str(e)
-        logger.error(error_str)
-        return 500, error_str
-
-    success_message = "Successfully logged in as '%s'" %(username)
-    logger.info(success_message)
-    return 200, success_message
+        return generate_error_response(500, str(e))

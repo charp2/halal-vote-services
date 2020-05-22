@@ -2,40 +2,40 @@
 from secrets import token_hex
 
 # our imports
-from common.user_auth import create_hashed_password
+from users_service.utils import create_hashed_password
+from users_service.utils import generate_error_response
+from users_service.utils import generate_success_response
 
 dataType = {
+    "email": str,
     "username": str,
     "password": str
 }
 
 def register_user(data: dataType, conn, logger):
+    email = data["email"]
     username = data["username"]
     password = data["password"]
     salt = token_hex(10)
+    activation_value = token_hex(10)
+
+    if not email:
+        return generate_error_response(500, "Invalid email passed in")
 
     if not username:
-        error_message = "Invalid username passed in"
-        logger.error(error_message)
-        return 500, error_message
+        return generate_error_response(500, "Invalid username passed in")
 
     if not password:
-        error_message = "Invalid password passed in"
-        logger.error(error_message)
-        return 500, error_message
+        return generate_error_response(500, "Invalid password passed in")
 
     hashed_password = create_hashed_password(password, salt)
     logger.info(hashed_password)
 
     try:
         with conn.cursor() as cur:
-            cur.execute("insert into Users (username, password, salt, activeStatus) values(%(username)s, %(password)s, %(salt)s, 'INACTIVE')", {'username': username, 'password': hashed_password, 'salt': salt})
+            cur.execute("insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')", {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
             conn.commit()
     except Exception as e:
-        error_str = str(e)
-        logger.error(error_str)
-        return 500, error_str
+        return generate_error_response(500, str(e))
 
-    success_message = "Added User '%s' into Users table" %(username)
-    logger.info(success_message)
-    return 200, success_message
+    return generate_success_response("Added User '%s' into Users table" %(username))
