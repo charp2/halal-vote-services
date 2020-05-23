@@ -1,5 +1,7 @@
 # standard python imports
 import logging
+import time
+from datetime import datetime, timedelta
 
 # logging config
 logger = logging.getLogger()
@@ -13,13 +15,21 @@ def valid_user(username: str, session_token: str, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select sessionToken, activeStatus from Users where username=%(username)s", {'username': username})
-            retrieved_session_token, active_status = cur.fetchone()
+            cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': username})
+            results = cur.fetchone()
+            conn.commit()
+
+            if results:
+                retrieved_session_token, session_timestamp, active_status = results
+            else:
+                return generate_error_response(404, "User not found")
 
             if active_status != "ACTIVE":
                 return generate_error_response(403, "User is Not ACTIVE")
             elif session_token != retrieved_session_token:
                 return generate_error_response(401, "User Not Authorized")
+            elif is_session_expired(session_timestamp):
+                return generate_error_response(440, "Session Expired")
             else:
                 return generate_success_response("")
 
@@ -33,3 +43,11 @@ def generate_error_response(status_code: int, error_msg: str):
 def generate_success_response(msg: str):
     logger.info(msg)
     return 200, msg
+
+def generate_timestamp():
+    ts = time.time()
+    return datetime.fromtimestamp(ts)
+
+def is_session_expired(session_timestamp):
+    current_timestamp = generate_timestamp()
+    return session_timestamp < (current_timestamp - timedelta(hours=24))

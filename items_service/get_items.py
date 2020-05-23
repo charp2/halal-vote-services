@@ -30,4 +30,4 @@ def get_items(data: dataType, conn, logger):
 
     responseBody = json.dumps(result, default=str)
 
-    return generate_success_response(responseBody))
+    return generate_success_response(responseBody)

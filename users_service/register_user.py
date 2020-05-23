@@ -34,7 +34,7 @@ def register_user(data: dataType, conn, logger):
     try:
         with conn.cursor() as cur:
             cur.execute("insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')", {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
-            conn.commit()
+        conn.commit()
     except Exception as e:
         return generate_error_response(500, str(e))
 
