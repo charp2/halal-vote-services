@@ -7,7 +7,12 @@ def activate_user(username: str, activation_value: str, conn, logger):
     try:
         with conn.cursor() as cur:
             cur.execute("select sessionToken, activeStatus from Users where username=%(username)s", {'username': username})
-            fetched_activation_value, fetched_active_status = cur.fetchone()
+            results = cur.fetchone()
+            
+            if results:
+                fetched_activation_value, fetched_active_status = results
+            else:
+                return generate_error_response(404, "User not found")
 
             if fetched_active_status == "INACTIVE":
                 if activation_value == fetched_activation_value:
