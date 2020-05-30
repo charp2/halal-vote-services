@@ -7,6 +7,7 @@ import json
 # our imports
 import rds_config
 from comments_service.add_comment import add_comment
+from comments_service.vote_comment import vote_comment
 from utils import valid_user
 
 # rds settings
@@ -60,6 +61,8 @@ def handler(event: eventType, context):
 
     if (path == '/add-comment'):
         responseStatus, responseBody = add_comment(requestBody, conn, logger)
+    elif (path == '/vote-comment'):
+        responseStatus, responseBody = vote_comment(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
