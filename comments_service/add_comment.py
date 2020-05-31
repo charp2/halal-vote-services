@@ -4,6 +4,8 @@ import pymysql
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from comments_service.utils import get_parent_depth
+from comments_service.utils import parent_depth_found
 
 dataType = {
     "parentId": int,
@@ -51,19 +53,6 @@ def add_comment(data: dataType, conn, logger):
 
 def is_top_level_comment(parent_id):
     return parent_id == None
-
-def parent_depth_found(parent_depth):
-    return parent_depth != None
-
-def get_parent_depth(conn, parent_id: int):
-    with conn.cursor() as cur:
-        cur.execute('select depth from Comments where id=%(parentId)s', {'parentId': parent_id})
-        conn.commit()
-        result = cur.fetchone()
-        print(result)
-
-        return result if not result else result[0]
-
 
 def insert_comment(conn, item_name, username, comment, comment_type, depth, top_level=True):
     with conn.cursor() as cur:

@@ -5,6 +5,8 @@ import pymysql
 #  our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from comments_service.utils import get_parent_depth
+from comments_service.utils import parent_depth_found
 
 dataType = {
     "itemName": str,
@@ -22,51 +24,16 @@ def get_item_comments(data: dataType, conn, logger):
 
         with conn.cursor() as cur:
             if is_show_more_request(parent_id):
-                return generate_success_response("show more request")
-            else:
-                cur.execute(
-                    '''
-                        select id, upVotes, downVotes, depth from Comments
-                        where itemName=%(itemName)s and depth <= %(depth)s
-                        order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc, id asc
-                        limit %(n)s
-                    ''', 
-                    {'itemName': item_name, 'depth': depth, 'n': n}
-                )
-                conn.commit()
-                top_rated_result = cur.fetchall()
+                parent_depth = get_parent_depth(conn, parent_id)
 
-                if top_rated_result:
-                    comment_ids = flatten_result(top_rated_result)
-
-                    cur.execute(
-                        '''
-                            select ancestor from CommentsClosure
-                            where descendent in %(commentIds)s
-                        ''', 
-                        {'commentIds': comment_ids}
-                    )
-                    conn.commit()
-                    ancestors_result = cur.fetchall()
-
-                    if ancestors_result:
-                        backtracked_comment_ids = flatten_result(ancestors_result)
-                        comment_ids = comment_ids + backtracked_comment_ids
-
-                    cur.execute(
-                        '''
-                            select * from Comments
-                            where id in %(allCommentIds)s
-                        ''', 
-                        { 'allCommentIds': comment_ids}
-                    )
-                    conn.commit()
-                    comment_details_result = cur.fetchall()
-
-                    return generate_success_response(json.dumps(comment_details_result, default=str))
+                if parent_depth_found(parent_depth):
+                    return fetch_comments(conn, item_name, parent_depth, parent_depth + depth, n, parent_id=parent_id)
 
                 else:
-                    return generate_error_response(500, "Couldn't generate top rated comments")
+                    return generate_error_response(404, "parentId does not exist")
+
+            else:
+                return fetch_comments(conn, item_name, 0, depth, n)
 
     except Exception as e:
         return generate_error_response(500, str(e))
@@ -76,3 +43,58 @@ def is_show_more_request(parent_id: int):
 
 def flatten_result(result):
     return list(map(lambda t: t[0], result))
+
+def fetch_comments(conn, item_name, start_depth, end_depth, n, parent_id=None):
+    with conn.cursor() as cur:
+        query = '''
+            select id, upVotes, downVotes, depth from Comments
+            where itemName=%(itemName)s and %(startDepth)s < depth and depth <= %(endDepth)s
+        '''
+        query_map = {'itemName': item_name, 'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
+
+        if start_depth > 0:
+            query = query + '''
+                and exists(select 1 from CommentsClosure
+                where %(parentId)s = CommentsClosure.ancestor and Comments.id = CommentsClosure.descendent)
+            '''
+            query_map['parentId'] = parent_id
+
+        query = query + '''
+            order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc, id asc
+            limit %(n)s
+        '''
+
+        returned_comments = []
+
+        cur.execute(query, query_map)
+        conn.commit()
+        top_rated_result = cur.fetchall()
+
+        if top_rated_result:
+            comment_ids = flatten_result(top_rated_result)
+
+            cur.execute(
+                '''
+                    select ancestor from CommentsClosure
+                    where descendent in %(commentIds)s
+                ''',
+                {'commentIds': comment_ids}
+            )
+            conn.commit()
+            ancestors_result = cur.fetchall()
+
+            if ancestors_result:
+                backtracked_comment_ids = flatten_result(ancestors_result)
+                comment_ids = comment_ids + backtracked_comment_ids
+
+            cur.execute(
+                '''
+                    select * from Comments
+                    where id in %(allCommentIds)s and depth > %(startDepth)s
+                ''',
+                { 'allCommentIds': comment_ids, 'startDepth': start_depth}
+            )
+            conn.commit()
+            returned_comments = cur.fetchall()
+
+        return generate_success_response(json.dumps(returned_comments, default=str))
