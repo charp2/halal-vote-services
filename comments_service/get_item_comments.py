@@ -76,8 +76,8 @@ def fetch_comments(conn, item_name, start_depth, end_depth, n, parent_id=None):
             cur.execute(
                 '''
                     select ancestor from CommentsClosure
-                    join Comments on CommentsClosure.ancestor = Comments.id
-                    where descendent in %(commentIds)s and Comments.depth > %(startDepth)s
+                    join Comments on ancestor = id
+                    where descendent in %(commentIds)s and depth > %(startDepth)s
                 ''',
                 {'commentIds': comment_ids, 'startDepth': start_depth}
             )
