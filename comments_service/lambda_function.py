@@ -9,6 +9,7 @@ import rds_config
 from comments_service.add_comment import add_comment
 from comments_service.vote_comment import vote_comment
 from comments_service.get_item_comments import get_item_comments
+from comments_service.delete_comment import delete_comment
 from utils import valid_user
 
 # rds settings
@@ -66,6 +67,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = vote_comment(requestBody, conn, logger)
     elif (path == '/get-item-comments'):
         responseStatus, responseBody = get_item_comments(requestBody, conn, logger)
+    elif (path == '/delete-comment'):
+        responseStatus, responseBody = delete_comment(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
