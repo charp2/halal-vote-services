@@ -19,7 +19,7 @@ def vote_comment(data: dataType, conn, logger):
         with conn.cursor() as cur:
             fetched_vote = get_user_vote(conn, comment_id, username)
 
-            if fetched_vote:
+            if vote_exists(fetched_vote):
                 if vote != fetched_vote:
                     if vote:
                         cur.execute('update Comments set upVotes = upVotes + 1, downVotes = downVotes - 1 WHERE id = %(id)s', {'id': comment_id})
@@ -27,7 +27,7 @@ def vote_comment(data: dataType, conn, logger):
                     else:
                         cur.execute('update Comments set upVotes = upVotes - 1, downVotes = downVotes + 1 WHERE id = %(id)s', {'id': comment_id})
                         conn.commit()
-                    
+
                     update_user_comment_vote(conn, comment_id, username, vote)
 
                     return generate_success_response("Vote successfully changed to %s" %(vote))
@@ -42,7 +42,7 @@ def vote_comment(data: dataType, conn, logger):
                 else:
                     cur.execute('update Comments set downVotes = downVotes + 1 WHERE id = %(id)s', {'id': comment_id})
                     conn.commit()
-                
+
                 add_user_comment_vote(conn, comment_id, username, vote)
 
                 return generate_success_response("Vote successfully added as %s" %(vote))
@@ -50,13 +50,16 @@ def vote_comment(data: dataType, conn, logger):
     except Exception as e:
         return generate_error_response(500, str(e))
 
+def vote_exists(fetched_vote):
+    return fetched_vote != None
+
 def get_user_vote(conn, comment_id, username):
     with conn.cursor() as cur:
         cur.execute('select vote from UserCommentVotes where commentId = %(commentId)s and username = %(username)s', {'commentId': comment_id, 'username': username})
         result = cur.fetchone()
         
         if result:
-            return result[0]
+            return 0 if result[0] == b'\x00' else 1
         else:
             return None
 
