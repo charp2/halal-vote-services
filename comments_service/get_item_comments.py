@@ -24,14 +24,28 @@ def get_item_comments(data: dataType, conn, logger):
             if is_show_more_request(parent_id):
                 return generate_success_response("show more request")
             else:
-                cur.execute('select id, upVotes, downVotes, depth from Comments where itemName=%(itemName)s and depth <= %(depth)s order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc, id asc limit %(n)s', {'itemName': item_name, 'depth': depth, 'n': n})
+                cur.execute(
+                    '''
+                        select id, upVotes, downVotes, depth from Comments
+                        where itemName=%(itemName)s and depth <= %(depth)s
+                        order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc, id asc
+                        limit %(n)s
+                    ''', 
+                    {'itemName': item_name, 'depth': depth, 'n': n}
+                )
                 conn.commit()
                 top_rated_result = cur.fetchall()
 
                 if top_rated_result:
                     comment_ids = flatten_result(top_rated_result)
 
-                    cur.execute('select ancestor from CommentsClosure where descendent in %(commentIds)s', {'commentIds': comment_ids})
+                    cur.execute(
+                        '''
+                            select ancestor from CommentsClosure
+                            where descendent in %(commentIds)s
+                        ''', 
+                        {'commentIds': comment_ids}
+                    )
                     conn.commit()
                     ancestors_result = cur.fetchall()
 
@@ -39,7 +53,13 @@ def get_item_comments(data: dataType, conn, logger):
                         backtracked_comment_ids = flatten_result(ancestors_result)
                         comment_ids = comment_ids + backtracked_comment_ids
 
-                    cur.execute('select * from Comments where id in %(allCommentIds)s', { 'allCommentIds': comment_ids})
+                    cur.execute(
+                        '''
+                            select * from Comments
+                            where id in %(allCommentIds)s
+                        ''', 
+                        { 'allCommentIds': comment_ids}
+                    )
                     conn.commit()
                     comment_details_result = cur.fetchall()
 
