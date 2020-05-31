@@ -8,6 +8,7 @@ import json
 import rds_config
 from comments_service.add_comment import add_comment
 from comments_service.vote_comment import vote_comment
+from comments_service.get_item_comments import get_item_comments
 from utils import valid_user
 
 # rds settings
@@ -21,7 +22,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = []
+no_session_token = ['/get-item-comments']
 
 # verify db connection
 try:
@@ -63,6 +64,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = add_comment(requestBody, conn, logger)
     elif (path == '/vote-comment'):
         responseStatus, responseBody = vote_comment(requestBody, conn, logger)
+    elif (path == '/get-item-comments'):
+        responseStatus, responseBody = get_item_comments(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
