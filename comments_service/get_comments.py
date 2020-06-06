@@ -36,7 +36,7 @@ def get_comments(data: dataType, conn, logger):
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                return fetch_comments(conn, item_name, 0, depth, n)
+                return fetch_comments(conn, item_name, comment_type, 0, depth, n)
 
     except Exception as e:
         return generate_error_response(500, str(e))
@@ -50,7 +50,7 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, par
             select id, upVotes, downVotes, depth from Comments
             where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
         '''
-        query_map = {'itemName': item_name, 'commentType': comment_type, startDepth': start_depth, 'endDepth': end_depth, 'n': n}
+        query_map = {'itemName': item_name, 'commentType': comment_type, 'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
 
         if start_depth > 0:
             query = query + '''
@@ -64,7 +64,7 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, par
             limit %(n)s
         '''
 
-        returned_comments = []
+        relevant_comments = []
 
         cur.execute(query, query_map)
         conn.commit()
