@@ -7,7 +7,7 @@ import json
 # our imports
 import rds_config
 from items_service.make_item import make_item
-from items_service.delete_items import delete_items
+from items_service.delete_item import delete_item
 from items_service.get_items import get_items
 from utils import valid_user
 from utils import get_response_headers
@@ -63,8 +63,8 @@ def handler(event: eventType, context):
 
     if (path == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)
-    elif (path == '/delete-items'):
-        responseStatus, responseBody = delete_items(requestBody, conn, logger)
+    elif (path == '/delete-item'):
+        responseStatus, responseBody = delete_item(requestBody, conn, logger)
     elif (path == '/get-items'):
         responseStatus, responseBody = get_items(requestBody, conn, logger)
     else:

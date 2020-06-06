@@ -57,3 +57,6 @@ def is_session_expired(session_timestamp):
 
 def get_response_headers():
     return response_headers
+
+def flatten_result(result):
+    return list(map(lambda t: t[0], result))

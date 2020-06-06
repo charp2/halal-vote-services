@@ -17,7 +17,7 @@ def delete_comment(data: dataType, conn, logger):
         return generate_error_response(500, "Invalid username passed in")
 
     if not id:
-        return generate_error_response(500, "Invalid itemName passed in")
+        return generate_error_response(500, "Invalid id passed in")
 
     # Access DB
     try:

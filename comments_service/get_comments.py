@@ -5,6 +5,7 @@ import pymysql
 #  our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import flatten_result
 from comments_service.utils import get_parent_depth
 from comments_service.utils import parent_depth_found
 
@@ -40,9 +41,6 @@ def get_comments(data: dataType, conn, logger):
 
 def is_show_more_request(parent_id: int):
     return parent_id != None
-
-def flatten_result(result):
-    return list(map(lambda t: t[0], result))
 
 def fetch_comments(conn, item_name, start_depth, end_depth, n, parent_id=None):
     with conn.cursor() as cur:
