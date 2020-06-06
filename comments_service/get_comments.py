@@ -14,7 +14,7 @@ dataType = {
     "depth": int,
     "n": int
 }
-def get_item_comments(data: dataType, conn, logger):
+def get_comments(data: dataType, conn, logger):
     # Access DB
     try:
         item_name = data.get('itemName')

@@ -10,6 +10,7 @@ from items_service.make_item import make_item
 from items_service.delete_items import delete_items
 from items_service.get_items import get_items
 from utils import valid_user
+from utils import get_response_headers
 
 # rds settings
 rds_host  = rds_config.db_host
@@ -58,7 +59,7 @@ def handler(event: eventType, context):
         status_code, msg = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
 
         if status_code != 200:
-            return {'statusCode': status_code, 'body': msg}
+            return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
 
     if (path == '/make-item'):
         responseStatus, responseBody = make_item(requestBody, conn, logger)
@@ -69,4 +70,4 @@ def handler(event: eventType, context):
     else:
         responseStatus, responseBody = 404, "No path found..."
 
-    return { 'statusCode': responseStatus, 'body': responseBody }
+    return { 'statusCode': responseStatus, 'body': responseBody, 'headers': get_response_headers() }

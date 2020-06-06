@@ -8,9 +8,10 @@ import json
 import rds_config
 from comments_service.add_comment import add_comment
 from comments_service.vote_comment import vote_comment
-from comments_service.get_item_comments import get_item_comments
+from comments_service.get_comments import get_comments
 from comments_service.delete_comment import delete_comment
 from utils import valid_user
+from utils import get_response_headers
 
 # rds settings
 rds_host  = rds_config.db_host
@@ -23,7 +24,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ['/get-item-comments']
+no_session_token = ['/get-comments']
 
 # verify db connection
 try:
@@ -59,17 +60,17 @@ def handler(event: eventType, context):
         status_code, msg = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
 
         if status_code != 200:
-            return {'statusCode': status_code, 'body': msg}
+            return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
 
     if (path == '/add-comment'):
         responseStatus, responseBody = add_comment(requestBody, conn, logger)
     elif (path == '/vote-comment'):
         responseStatus, responseBody = vote_comment(requestBody, conn, logger)
-    elif (path == '/get-item-comments'):
-        responseStatus, responseBody = get_item_comments(requestBody, conn, logger)
+    elif (path == '/get-comments'):
+        responseStatus, responseBody = get_comments(requestBody, conn, logger)
     elif (path == '/delete-comment'):
         responseStatus, responseBody = delete_comment(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
-    return { 'statusCode': responseStatus, 'body': responseBody }
+    return { 'statusCode': responseStatus, 'body': responseBody, 'headers': get_response_headers() }

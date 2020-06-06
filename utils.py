@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 # logging config
 logger = logging.getLogger()
 
+# response headers
+response_headers = {'Access-Control-Allow-Origin': '*'}
+
 def valid_user(username: str, session_token: str, conn, logger):
     if not username:
         return generate_error_response(500, "Invalid username passed in")
@@ -51,3 +54,6 @@ def generate_timestamp():
 def is_session_expired(session_timestamp):
     current_timestamp = generate_timestamp()
     return session_timestamp < (current_timestamp - timedelta(hours=24))
+
+def get_response_headers():
+    return response_headers
