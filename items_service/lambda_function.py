@@ -6,7 +6,7 @@ import json
 
 # our imports
 import rds_config
-from items_service.make_item import make_item
+from items_service.add_item import add_item
 from items_service.delete_item import delete_item
 from items_service.get_items import get_items
 from utils import valid_user
@@ -61,8 +61,8 @@ def handler(event: eventType, context):
         if status_code != 200:
             return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
 
-    if (path == '/make-item'):
-        responseStatus, responseBody = make_item(requestBody, conn, logger)
+    if (path == '/add-item'):
+        responseStatus, responseBody = add_item(requestBody, conn, logger)
     elif (path == '/delete-item'):
         responseStatus, responseBody = delete_item(requestBody, conn, logger)
     elif (path == '/get-items'):
