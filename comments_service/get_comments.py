@@ -11,6 +11,7 @@ from comments_service.utils import parent_depth_found
 
 dataType = {
     "itemName": str,
+    "commentType": str,
     "parentId": int,
     "depth": int,
     "n": int
@@ -19,6 +20,7 @@ def get_comments(data: dataType, conn, logger):
     # Access DB
     try:
         item_name = data.get('itemName')
+        comment_type = data.get('commentType')
         parent_id = data.get('parentId')
         depth = data.get('depth')
         n = data.get('n')
@@ -28,7 +30,7 @@ def get_comments(data: dataType, conn, logger):
                 parent_depth = get_parent_depth(conn, parent_id)
 
                 if parent_depth_found(parent_depth):
-                    return fetch_comments(conn, item_name, parent_depth, parent_depth + depth, n, parent_id=parent_id)
+                    return fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, parent_id=parent_id)
 
                 else:
                     return generate_error_response(404, "parentId does not exist")
@@ -42,13 +44,13 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, item_name, start_depth, end_depth, n, parent_id=None):
+def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, parent_id=None):
     with conn.cursor() as cur:
         query = '''
             select id, upVotes, downVotes, depth from Comments
-            where itemName=%(itemName)s and %(startDepth)s < depth and depth <= %(endDepth)s
+            where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
         '''
-        query_map = {'itemName': item_name, 'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
+        query_map = {'itemName': item_name, 'commentType': comment_type, startDepth': start_depth, 'endDepth': end_depth, 'n': n}
 
         if start_depth > 0:
             query = query + '''
