@@ -24,24 +24,32 @@ def delete_comment(data: dataType, conn, logger):
         if has_descendent(conn, id):
             with conn.cursor() as cur:
                 cur.execute(
-                    '''UPDATE Comments SET comment = "__DELETED__" WHERE id = %(id)s''',
-                    {'id': id}
+                    '''UPDATE Comments SET comment = "__DELETED__" WHERE id=%(id)s and username=%(username)s''',
+                    {'id': id, 'username': username}
                 )
+                if cur.rowcount <= 0:
+                    return generate_error_response(500, "Unsuccesful delete attempt")
+
                 conn.commit()
+
             return generate_success_response("Updated comment with id: %s to reflect __DELETED__ status" %(id))
 
         else:
             with conn.cursor() as cur:
                 cur.execute(
-                    '''delete from Comments where id=%(id)s''', 
-                    {'id': id}
+                    '''delete from Comments where id=%(id)s and username=%(username)s''', 
+                    {'id': id, 'username': username}
                 )
+                if cur.rowcount > 0:
+                    cur.execute(
+                        '''delete from CommentsClosure where descendent=%(id)s''',
+                        {'id': id}
+                    )
+                else:
+                    return generate_error_response(500, "Unsuccesful delete attempt")
+
                 conn.commit()
-                cur.execute(
-                    '''delete from CommentsClosure where descendent=%(id)s''',
-                    {'id': id}
-                )
-                conn.commit()
+
             return generate_success_response("Deleted comment with id: %s" %(id))
                 
 
