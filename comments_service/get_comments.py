@@ -88,11 +88,11 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, par
                 backtracked_comment_ids = flatten_result(ancestors_result)
                 comment_ids = comment_ids + backtracked_comment_ids
 
-            relevant_comments = fetch_relevant_comments_dict(conn, comment_ids)
+            relevant_comments = fetch_relevant_comments(conn, comment_ids)
 
         return generate_success_response(json.dumps(relevant_comments, default=str))
 
-def fetch_relevant_comments_dict(conn, comment_ids):
+def fetch_relevant_comments(conn, comment_ids):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
