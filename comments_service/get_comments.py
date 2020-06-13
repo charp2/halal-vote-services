@@ -96,8 +96,10 @@ def fetch_relevant_comments_dict(conn, comment_ids):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
-                select * from Comments
-                where id in %(commentIds)s
+                select id, username, comment, upVotes, downVotes, ancestor, descendent
+                from Comments left join CommentsClosure
+                on (id = ancestor or id = descendent) and isDirect = 1
+                where id in %(commentIds)s and (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL)
             ''',
             { 'commentIds': comment_ids}
         )
