@@ -18,11 +18,20 @@ def get_items(data: dataType, conn, logger):
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             if (data.get('itemNames') != None):
-                itemsToGet = ','.join(map(lambda x: '"%s"' %(x), data['itemNames']))
-                cur.execute('select * from Items where itemName in (%s)' %(itemsToGet))
+                cur.execute(
+                    '''
+                        select * from Items where itemName in %(itemNames)s
+                    ''',
+                    {"itemNames": data['itemNames']}
+                )
                 result = cur.fetchall()
             else:
-                cur.execute('select * from Items limit %(offset)s, %(n)s', { 'offset': data.get('offset', 0), 'n': data.get('n', sys.maxsize) })
+                cur.execute(
+                    '''
+                        select * from Items limit %(offset)s, %(n)s
+                    ''',
+                    { 'offset': data.get('offset', 0), 'n': data.get('n', sys.maxsize) }
+                )
                 result = cur.fetchall()
         conn.commit()
     except Exception as e:

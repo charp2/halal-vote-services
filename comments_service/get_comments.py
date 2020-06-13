@@ -14,7 +14,8 @@ dataType = {
     "commentType": str,
     "parentId": int,
     "depth": int,
-    "n": int
+    "n": int,
+    "excludedCommentIds": [int]
 }
 def get_comments(data: dataType, conn, logger):
     # Access DB
@@ -24,19 +25,20 @@ def get_comments(data: dataType, conn, logger):
         parent_id = data.get('parentId')
         depth = data.get('depth')
         n = data.get('n')
+        excluded_comment_ids = list(map(str, data.get('excludedCommentIds', [])))
 
         with conn.cursor() as cur:
             if is_show_more_request(parent_id):
                 parent_depth = get_parent_depth(conn, parent_id)
 
                 if parent_depth_found(parent_depth):
-                    return fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, parent_id=parent_id)
+                    return fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id)
 
                 else:
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                return fetch_comments(conn, item_name, comment_type, 0, depth, n)
+                return fetch_comments(conn, item_name, comment_type, 0, depth, n, excluded_comment_ids)
 
     except Exception as e:
         return generate_error_response(500, str(e))
@@ -44,7 +46,7 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, parent_id=None):
+def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None):
     with conn.cursor() as cur:
         query = '''
             select id, upVotes, downVotes, depth from Comments
@@ -58,6 +60,16 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, par
                 where %(parentId)s = CommentsClosure.ancestor and Comments.id = CommentsClosure.descendent)
             '''
             query_map['parentId'] = parent_id
+
+        if excluded_comment_ids:
+            query = '''
+                select * from (
+                    select * from (''' + query + ''') a left join CommentsClosure
+                    on ( (id = descendent and ancestor in %(excludedCommentIds)s ) )
+                ) c
+                where c.id not in %(excludedCommentIds)s and c.ancestor is NULL
+            '''
+            query_map['excludedCommentIds'] = excluded_comment_ids
 
         query = query + '''
             order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc, id asc
@@ -99,7 +111,7 @@ def fetch_relevant_comments(conn, comment_ids):
                 select id, username, comment, upVotes, downVotes, ancestor, descendent
                 from Comments left join CommentsClosure
                 on (id = ancestor or id = descendent) and isDirect = 1
-                where id in %(commentIds)s and (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL)
+                where id in %(commentIds)s and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
             ''',
             { 'commentIds': comment_ids}
         )
