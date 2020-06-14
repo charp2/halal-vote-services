@@ -114,8 +114,8 @@ def fetch_relevant_comments(conn, comment_ids):
             '''
                 select id, username, comment, upVotes, downVotes, numReplies, ancestor, descendent
                 from Comments left join CommentsClosure
-                on (id = ancestor or id = descendent) and isDirect = 1
-                where id in %(commentIds)s and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
+                on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
+                where id in %(commentIds)s
             ''',
             { 'commentIds': comment_ids}
         )
