@@ -60,7 +60,7 @@ def handler(event: eventType, context):
     requestHeaders = event['headers']
 
     if path not in no_session_token:
-        status_code, msg = valid_user(requestBody['username'], requestHeaders['sessionToken'], conn, logger)
+        status_code, msg = valid_user(requestBody['username'], requestHeaders['sessiontoken'], conn, logger)
 
         if status_code != 200:
             return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
