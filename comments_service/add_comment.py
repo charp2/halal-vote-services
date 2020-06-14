@@ -33,8 +33,8 @@ def add_comment(data: dataType, conn, logger):
     # Access DB
     try:
         if is_top_level_comment(parent_id):
-            insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
-            return generate_success_response("Added comment '%s' into Comments table" %(comment))
+            new_comment_id = insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
+            return generate_success_response(new_comment_id)
 
         else:
             parent_depth = get_parent_depth(conn, parent_id)
@@ -43,7 +43,7 @@ def add_comment(data: dataType, conn, logger):
 
                 update_closure_table(conn, parent_id, new_comment_id)
 
-                return generate_success_response("Added comment '%s' into Comments table" %(comment))
+                return generate_success_response(new_comment_id)
 
             else:
                 return generate_error_response(404, "parentId does not exist")
@@ -73,10 +73,9 @@ def insert_comment(conn, parent_id, item_name, username, comment, comment_type, 
         )
         conn.commit()
 
-        if not top_level:
-            cur.execute('select LAST_INSERT_ID()')
-            conn.commit()
-            return cur.fetchone()[0]
+        cur.execute('select LAST_INSERT_ID()')
+        conn.commit()
+        return cur.fetchone()[0]
 
 def update_closure_table(conn, parent_id, new_comment_id):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:

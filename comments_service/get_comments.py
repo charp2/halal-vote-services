@@ -52,18 +52,22 @@ def is_show_more_request(parent_id: int):
 
 def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None):
     with conn.cursor() as cur:
-        query = '''
-            select id from Comments
-            where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
-        '''
-        query_map = {'itemName': item_name, 'commentType': comment_type, 'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
-
+        query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
+        
         if start_depth > 0:
-            query = query + '''
+            query = '''
+                select id from Comments where %(startDepth)s < depth and depth <= %(endDepth)s
                 and exists(select 1 from CommentsClosure
                 where %(parentId)s = CommentsClosure.ancestor and Comments.id = CommentsClosure.descendent)
             '''
             query_map['parentId'] = parent_id
+        else:
+            query = '''
+                select id from Comments
+                where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
+            '''
+            query_map['itemName'] = item_name
+            query_map['commentType'] = comment_type
 
         if excluded_comment_ids:
             query = '''
