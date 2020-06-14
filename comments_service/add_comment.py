@@ -33,13 +33,13 @@ def add_comment(data: dataType, conn, logger):
     # Access DB
     try:
         if is_top_level_comment(parent_id):
-            insert_comment(conn, item_name, username, comment, comment_type, 1)
+            insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
             return generate_success_response("Added comment '%s' into Comments table" %(comment))
 
         else:
             parent_depth = get_parent_depth(conn, parent_id)
             if parent_depth_found(parent_depth):
-                new_comment_id = insert_comment(conn, item_name, username, comment, comment_type, parent_depth + 1, top_level=False)
+                new_comment_id = insert_comment(conn, parent_id, item_name, username, comment, comment_type, parent_depth + 1, top_level=False)
 
                 update_closure_table(conn, parent_id, new_comment_id)
 
@@ -54,9 +54,23 @@ def add_comment(data: dataType, conn, logger):
 def is_top_level_comment(parent_id):
     return parent_id == None
 
-def insert_comment(conn, item_name, username, comment, comment_type, depth, top_level=True):
+def insert_comment(conn, parent_id, item_name, username, comment, comment_type, depth, top_level=True):
     with conn.cursor() as cur:
-        cur.execute('insert into Comments (itemName, username, comment, commentType, depth) values(%(itemName)s, %(username)s, %(comment)s, %(commentType)s, %(depth)s)', {'itemName': item_name, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth})
+        cur.execute(
+            '''
+            insert into Comments (itemName, username, comment, commentType, depth) 
+            values(%(itemName)s, %(username)s, %(comment)s, %(commentType)s, %(depth)s)
+            ''', 
+            {'itemName': item_name, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth}
+        )
+        cur.execute(
+            '''
+            Update Comments
+            Set numReplies = numReplies + 1
+            Where id = %(parentId)s
+            ''',
+            { "parentId": parent_id }
+        )
         conn.commit()
 
         if not top_level:

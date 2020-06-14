@@ -49,7 +49,7 @@ def is_show_more_request(parent_id: int):
 def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None):
     with conn.cursor() as cur:
         query = '''
-            select id, upVotes, downVotes, depth from Comments
+            select id from Comments
             where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
         '''
         query_map = {'itemName': item_name, 'commentType': comment_type, 'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
@@ -108,7 +108,7 @@ def fetch_relevant_comments(conn, comment_ids):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
-                select id, username, comment, upVotes, downVotes, ancestor, descendent
+                select id, username, comment, upVotes, downVotes, numReplies, ancestor, descendent
                 from Comments left join CommentsClosure
                 on (id = ancestor or id = descendent) and isDirect = 1
                 where id in %(commentIds)s and ( (ancestor in %(commentIds)s or ancestor is NULL) or (descendent in %(commentIds)s or descendent is NULL) )
