@@ -116,7 +116,7 @@ def fetch_relevant_comments(conn, comment_ids):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
-                select id, username, comment, upVotes, downVotes, numReplies, ancestor, descendent
+                select id, timeStamp, username, comment, upVotes, downVotes, numReplies, ancestor, descendent
                 from Comments left join CommentsClosure
                 on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                 where id in %(commentIds)s
@@ -136,6 +136,7 @@ def make_comments_object(rows):
     for row in rows:
         # comment details
         comment_id = row["id"]
+        timestamp = row["timeStamp"]
         username = row["username"]
         comment = row["comment"]
         up_votes = row["upVotes"]
@@ -174,6 +175,7 @@ def make_comments_object(rows):
         if not comment_id in filled_comments:
             comment = {
                 "id": comment_id,
+                "timeStamp": timestamp,
                 "username": username,
                 "comment": comment,
                 "upVotes": up_votes,
@@ -269,6 +271,7 @@ def get_comment_object(comments_object, ancestor_map, comment_id):
 
 def set_comment_details(comments_object, ancestor_map, comment):
     comment_object = get_comment_object(comments_object, ancestor_map, comment["id"])
+    comment_object["timeStamp"] = comment["timeStamp"]
     comment_object["username"] = comment["username"]
     comment_object["comment"] = comment["comment"]
     comment_object["upVotes"] = comment["upVotes"]
@@ -281,6 +284,7 @@ def transform_comments_object(comments_object):
         replies = transform_comments_object_helper(comment["replies"])
         top_level_comment = {
             "id": comment["root"],
+            "timeStamp": comment["timeStamp"],
             "username": comment["username"],
             "comment": comment["comment"],
             "upVotes": comment["upVotes"],
@@ -298,6 +302,7 @@ def transform_comments_object_helper(comment_object_replies):
         nested_replies = transform_comments_object_helper(comment["replies"])
         replies.append({
             "id": comment_id,
+            "timeStamp": comment["timeStamp"],
             "username": comment["username"],
             "comment": comment["comment"],
             "upVotes": comment["upVotes"],
