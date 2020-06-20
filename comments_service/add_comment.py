@@ -1,5 +1,6 @@
 # standard python imports
 import pymysql
+import json
 
 # our imports
 from utils import generate_error_response
@@ -33,17 +34,18 @@ def add_comment(data: dataType, conn, logger):
     # Access DB
     try:
         if is_top_level_comment(parent_id):
-            new_comment_id = insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
-            return generate_success_response(new_comment_id)
+            new_comment = insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
+            print(new_comment)
+            return generate_success_response(json.dumps(new_comment, default=str))
 
         else:
             parent_depth = get_parent_depth(conn, parent_id)
             if parent_depth_found(parent_depth):
-                new_comment_id = insert_comment(conn, parent_id, item_name, username, comment, comment_type, parent_depth + 1, top_level=False)
+                new_comment = insert_comment(conn, parent_id, item_name, username, comment, comment_type, parent_depth + 1, top_level=False)
 
-                update_closure_table(conn, parent_id, new_comment_id)
+                update_closure_table(conn, parent_id, new_comment["id"])
 
-                return generate_success_response(new_comment_id)
+                return generate_success_response(json.dumps(new_comment, default=str))
 
             else:
                 return generate_error_response(404, "parentId does not exist")
@@ -55,7 +57,7 @@ def is_top_level_comment(parent_id):
     return parent_id == None
 
 def insert_comment(conn, parent_id, item_name, username, comment, comment_type, depth, top_level=True):
-    with conn.cursor() as cur:
+    with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
             insert into Comments (itemName, username, comment, commentType, depth) 
@@ -72,10 +74,11 @@ def insert_comment(conn, parent_id, item_name, username, comment, comment_type, 
             { "parentId": parent_id }
         )
         conn.commit()
+        print("got here")
 
-        cur.execute('select LAST_INSERT_ID()')
+        cur.execute('select * from Comments where id=(select LAST_INSERT_ID())')
         conn.commit()
-        return cur.fetchone()[0]
+        return cur.fetchone()
 
 def update_closure_table(conn, parent_id, new_comment_id):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
