@@ -81,7 +81,7 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
             query_map['excludedCommentIds'] = excluded_comment_ids
 
         query = query + '''
-            order by ( 2 * (upVotes + downVotes) ) / ( depth * ( POWER(TIMESTAMPDIFF(SECOND,timeStamp,CURRENT_TIMESTAMP() ), 1/2) ) ) desc, timeStamp desc
+            order by ( 2 * (upVotes + downVotes) ) / ( depth * ( POWER(TIMESTAMPDIFF(DAY,timeStamp,CURRENT_TIMESTAMP() ), 1/2) ) ) desc, timeStamp desc
             limit %(n)s
         '''
 
