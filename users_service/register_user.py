@@ -1,5 +1,6 @@
 # standard python imports
 from secrets import token_hex
+import json
 
 # our imports
 from users_service.utils import create_hashed_password
@@ -38,4 +39,4 @@ def register_user(data: dataType, conn, logger):
     except Exception as e:
         return generate_error_response(500, str(e))
 
-    return generate_success_response("Added User '%s' into Users table" %(username))
+    return generate_success_response(json.dumps(username, default=str))
