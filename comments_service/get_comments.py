@@ -81,7 +81,7 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
             query_map['excludedCommentIds'] = excluded_comment_ids
 
         query = query + '''
-            order by ((2 * (upVotes + downVotes)) / depth) desc, depth asc
+            order by ( 2 * (upVotes + downVotes) ) / ( depth * ( POWER(TIMESTAMPDIFF(SECOND,timeStamp,CURRENT_TIMESTAMP() ), 1/2) ) ) desc, timeStamp desc
             limit %(n)s
         '''
 
@@ -121,6 +121,7 @@ def fetch_relevant_comments(conn, comment_ids):
                 from Comments left join CommentsClosure
                 on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                 where id in %(commentIds)s
+                order by timeStamp desc
             ''',
             { 'commentIds': comment_ids}
         )
