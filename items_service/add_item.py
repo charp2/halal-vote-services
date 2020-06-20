@@ -10,7 +10,7 @@ def add_item(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
-            cur.execute('insert into Items (itemName, username, halalVotes, haramVotes, numComments) values(%(itemName)s, %(username)s, 0, 0, 0)', {'itemName': data['itemName'], 'username': data['username']})
+            cur.execute('insert into Items (itemName, username, halalVotes, haramVotes) values(%(itemName)s, %(username)s, 0, 0)', {'itemName': data['itemName'], 'username': data['username']})
         conn.commit()
     except Exception as e:
         return generate_error_response(500, str(e))

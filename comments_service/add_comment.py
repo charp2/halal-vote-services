@@ -7,6 +7,7 @@ from utils import generate_error_response
 from utils import generate_success_response
 from comments_service.utils import get_parent_depth
 from comments_service.utils import parent_depth_found
+from comments_service.utils import comment_type_to_num_comments_type_dict
 
 dataType = {
     "parentId": int,
@@ -65,16 +66,27 @@ def insert_comment(conn, parent_id, item_name, username, comment, comment_type, 
             ''', 
             {'itemName': item_name, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth}
         )
-        cur.execute(
-            '''
-            Update Comments
-            Set numReplies = numReplies + 1
-            Where id = %(parentId)s
-            ''',
-            { "parentId": parent_id }
-        )
+        if top_level:
+            num_comments_type = comment_type_to_num_comments_type_dict[comment_type]
+            cur.execute(
+                '''
+                Update Items
+                Set {} = {} + 1
+                Where itemName = %(itemName)s
+                '''.format(num_comments_type, num_comments_type),
+                { "itemName": item_name }
+            )
+        else:
+            cur.execute(
+                '''
+                Update Comments
+                Set numReplies = numReplies + 1
+                Where id = %(parentId)s
+                ''',
+                { "parentId": parent_id }
+            )
+        
         conn.commit()
-        print("got here")
 
         cur.execute('select * from Comments where id=(select LAST_INSERT_ID())')
         conn.commit()

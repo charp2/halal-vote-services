@@ -117,7 +117,7 @@ def fetch_relevant_comments(conn, comment_ids):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
-                select id, timeStamp, username, comment, upVotes, downVotes, numReplies, ancestor, descendent
+                select id, timeStamp, username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent
                 from Comments left join CommentsClosure
                 on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                 where id in %(commentIds)s
@@ -141,6 +141,7 @@ def make_comments_object(rows):
         timestamp = row["timeStamp"]
         username = row["username"]
         comment = row["comment"]
+        comment_type = row["commentType"]
         up_votes = row["upVotes"]
         down_votes = row["downVotes"]
         num_replies = row["numReplies"]
@@ -180,6 +181,7 @@ def make_comments_object(rows):
                 "timeStamp": timestamp,
                 "username": username,
                 "comment": comment,
+                "commentType": comment_type,
                 "upVotes": up_votes,
                 "downVotes": down_votes,
                 "numReplies": num_replies
@@ -276,6 +278,7 @@ def set_comment_details(comments_object, ancestor_map, comment):
     comment_object["timeStamp"] = comment["timeStamp"]
     comment_object["username"] = comment["username"]
     comment_object["comment"] = comment["comment"]
+    comment_object["commentType"] = comment["commentType"]
     comment_object["upVotes"] = comment["upVotes"]
     comment_object["downVotes"] = comment["downVotes"]
     comment_object["numReplies"] = comment["numReplies"]
@@ -289,6 +292,7 @@ def transform_comments_object(comments_object):
             "timeStamp": comment["timeStamp"],
             "username": comment["username"],
             "comment": comment["comment"],
+            "commentType": comment["commentType"],
             "upVotes": comment["upVotes"],
             "downVotes": comment["downVotes"],
             "numReplies": comment["numReplies"],
@@ -307,6 +311,7 @@ def transform_comments_object_helper(comment_object_replies):
             "timeStamp": comment["timeStamp"],
             "username": comment["username"],
             "comment": comment["comment"],
+            "commentType": comment["commentType"],
             "upVotes": comment["upVotes"],
             "downVotes": comment["downVotes"],
             "numReplies": comment["numReplies"],
