@@ -56,14 +56,15 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
         
         if start_depth > 0:
             query = '''
-                select id from Comments where %(startDepth)s < depth and depth <= %(endDepth)s
+                select * from Comments
+                where %(startDepth)s < depth and depth <= %(endDepth)s
                 and exists(select 1 from CommentsClosure
                 where %(parentId)s = CommentsClosure.ancestor and Comments.id = CommentsClosure.descendent)
             '''
             query_map['parentId'] = parent_id
         else:
             query = '''
-                select id from Comments
+                select * from Comments
                 where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
             '''
             query_map['itemName'] = item_name
