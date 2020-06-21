@@ -17,7 +17,7 @@ def vote_item(data: dataType, conn, logger):
     vote = data['vote']
 
     if vote != 0 and vote != 1:
-        return generate_error_response(400, "Vote is invalid.")
+        return generate_error_response(400, "Ivalid vote passed in.")
     
     # Access DB
     try:

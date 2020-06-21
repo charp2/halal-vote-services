@@ -14,7 +14,7 @@ def valid_user(username: str, session_token: str, conn, logger):
         return generate_error_response(500, "Invalid username passed in")
 
     if not session_token:
-        return generate_error_response(500, "Invalid sessionToken passed in")
+        return generate_error_response(500, "Invalid sessiontoken passed in")
 
     try:
         with conn.cursor() as cur:

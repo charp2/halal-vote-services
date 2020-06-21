@@ -67,7 +67,7 @@ def handler(event: eventType, context):
     elif (path == '/delete-item'):
         responseStatus, responseBody = delete_item(requestBody, conn, logger)
     elif (path == '/get-items'):
-        responseStatus, responseBody = get_items(requestBody, conn, logger)
+        responseStatus, responseBody = get_items(requestBody, requestHeaders, conn, logger)
     elif (path == '/vote-item'):
         responseStatus, responseBody = vote_item(requestBody, conn, logger)
     else:
