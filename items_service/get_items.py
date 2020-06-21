@@ -43,7 +43,7 @@ def get_items(data: dataType, request_headers: any, conn, logger):
                 
             if item_names != None:
                 query = query + '''
-                    where itemName in %(itemNames)s
+                    where Items.itemName in %(itemNames)s
                 '''
                 query_map['itemNames']  = item_names
 
