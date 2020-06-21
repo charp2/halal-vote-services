@@ -11,3 +11,5 @@ def get_parent_depth(conn, parent_id: int):
         result = cur.fetchone()
 
         return result if not result else result[0]
+
+comment_type_to_num_comments_type_dict = { "HALAL": "numHalalComments", "HARAM": "numHaramComments" }
