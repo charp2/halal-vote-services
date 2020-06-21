@@ -9,6 +9,7 @@ import rds_config
 from items_service.add_item import add_item
 from items_service.delete_item import delete_item
 from items_service.get_items import get_items
+from items_service.vote_item import vote_item
 from utils import valid_user
 from utils import get_response_headers
 
@@ -67,6 +68,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = delete_item(requestBody, conn, logger)
     elif (path == '/get-items'):
         responseStatus, responseBody = get_items(requestBody, conn, logger)
+    elif (path == '/vote-item'):
+        responseStatus, responseBody = vote_item(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 

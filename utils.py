@@ -60,3 +60,6 @@ def get_response_headers():
 
 def flatten_result(result):
     return list(map(lambda t: t[0], result))
+
+def convert_bit_to_int(bit):
+    return 0 if bit == b'\x00' else 1

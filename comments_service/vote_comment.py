@@ -3,6 +3,7 @@
 #  our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import convert_bit_to_int
 
 dataType = {
     "commentId": int,
@@ -46,7 +47,7 @@ def get_user_vote(conn, comment_id, username):
         result = cur.fetchone()
         
         if result:
-            return 0 if result[0] == b'\x00' else 1
+            return convert_bit_to_int(result[0])
         else:
             return None
 
