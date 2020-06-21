@@ -45,7 +45,7 @@ def vote_item(data: dataType, conn, logger):
                         '''
                             update Items
                             set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' + 1, ''' + prev_item_vote_field + ''' = ''' + prev_item_vote_field + ''' - 1
-                            where username = %(username)s and itemName = %(itemName)s
+                            where itemName = %(itemName)s
                         ''',
                         {'username': username, 'itemName': item_name}
                     )
@@ -59,7 +59,7 @@ def vote_item(data: dataType, conn, logger):
                         '''
                             update Items
                             set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' - 1
-                            where username = %(username)s and itemName = %(itemName)s
+                            where itemName = %(itemName)s
                         ''',
                         {'username': username, 'itemName': item_name}
                     )
@@ -72,7 +72,7 @@ def vote_item(data: dataType, conn, logger):
                     '''
                         update Items
                         set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' + 1
-                        where username = %(username)s and itemName = %(itemName)s
+                        where itemName = %(itemName)s
                     ''',
                     {'username': username, 'itemName': item_name}
                 )
