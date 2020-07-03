@@ -17,29 +17,20 @@ def vote_comment(data: dataType, conn, logger):
         username = data.get('username')
         vote = data.get('vote')
 
-        fetched_vote = get_user_vote(conn, comment_id, username)
-
-        if vote_exists(fetched_vote):
-            if vote != fetched_vote:
-                update_comment_vote(conn, comment_id, vote, already_voted=True)
-                update_user_comment_vote(conn, comment_id, username, vote)
-
-                return generate_success_response("Vote successfully changed to %s" %(vote))
-
-            else:
-                return generate_success_response("Already voted %s" %(vote))
-
+        prev_vote = get_user_vote(conn, comment_id, username)
+        update_comment_vote(conn, comment_id, vote, prev_vote)
+        if vote_exists(prev_vote):
+            update_user_comment_vote(conn, comment_id, username, vote, prev_vote)
         else:
-            update_comment_vote(conn, comment_id, vote)
             add_user_comment_vote(conn, comment_id, username, vote)
 
-            return generate_success_response("Vote successfully added as %s" %(vote))
+        return generate_success_response(vote)
 
     except Exception as e:
         return generate_error_response(500, str(e))
 
-def vote_exists(fetched_vote):
-    return fetched_vote != None
+def vote_exists(prev_vote):
+    return prev_vote != None
 
 def get_user_vote(conn, comment_id, username):
     with conn.cursor() as cur:
@@ -51,9 +42,12 @@ def get_user_vote(conn, comment_id, username):
         else:
             return None
 
-def update_user_comment_vote(conn, comment_id: int, username: str, vote: int):
+def update_user_comment_vote(conn, comment_id: int, username: str, vote: int, prev_vote: int):
     with conn.cursor() as cur:
-        cur.execute('''update UserCommentVotes set vote = %(vote)s WHERE username = %(username)s and commentId = %(commentId)s''', {'vote': vote, 'username': username, 'commentId': comment_id})
+        if vote == prev_vote:
+            cur.execute('''delete from UserCommentVotes where (username = %(username)s) and (commentId = %(commentId)s)''', {'username': username, 'commentId': comment_id})
+        elif vote != prev_vote:
+            cur.execute('''update UserCommentVotes set vote = %(vote)s where username = %(username)s and commentId = %(commentId)s''', {'vote': vote, 'username': username, 'commentId': comment_id})
         conn.commit()
 
 def add_user_comment_vote(conn, comment_id: int, username: str, vote: int):
@@ -62,22 +56,36 @@ def add_user_comment_vote(conn, comment_id: int, username: str, vote: int):
         conn.commit()
 
 
-def update_comment_vote(conn, comment_id, vote, already_voted: bool = False):
+def update_comment_vote(conn, comment_id, vote, prev_vote: int = None):
     with conn.cursor() as cur:
-        if already_voted:
-            if vote:
-                query = '''
-                    update Comments 
-                    set upVotes = upVotes + 1, downVotes = downVotes - 1 
-                    WHERE id = %(id)s
-                '''
-            else:
-                query = '''
-                    update Comments 
-                    set upVotes = upVotes - 1, downVotes = downVotes + 1 
-                    WHERE id = %(id)s
-                '''
-        else:
+        if vote_exists(prev_vote):
+            if vote != prev_vote:
+                if vote:
+                    query = '''
+                        update Comments 
+                        set upVotes = upVotes + 1, downVotes = downVotes - 1 
+                        WHERE id = %(id)s
+                    '''
+                else:
+                    query = '''
+                        update Comments 
+                        set upVotes = upVotes - 1, downVotes = downVotes + 1 
+                        WHERE id = %(id)s
+                    '''
+            elif vote == prev_vote:
+                if vote:
+                    query = '''
+                        update Comments 
+                        set upVotes = upVotes - 1 
+                        WHERE id = %(id)s
+                    '''
+                else:
+                    query = '''
+                        update Comments 
+                        set downVotes = downVotes - 1 
+                        WHERE id = %(id)s
+                    '''
+        elif not vote_exists(prev_vote):
             if vote:
                 query = '''
                     update Comments 
@@ -91,5 +99,5 @@ def update_comment_vote(conn, comment_id, vote, already_voted: bool = False):
                     WHERE id = %(id)s
                 '''
 
-            cur.execute(query, {'id': comment_id})
-        conn.commit()
+        cur.execute(query, {'id': comment_id})
+    conn.commit()
