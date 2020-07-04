@@ -11,6 +11,7 @@ from comments_service.utils import parent_depth_found
 
 dataType = {
     "itemName": str,
+    "username": str,
     "commentType": str,
     "parentId": int,
     "depth": int,
@@ -21,6 +22,7 @@ def get_comments(data: dataType, conn, logger):
     # Access DB
     try:
         item_name = data.get('itemName')
+        username = data.get('username')
         comment_type = data.get('commentType')
         parent_id = data.get('parentId')
         depth = data.get('depth')
@@ -32,7 +34,7 @@ def get_comments(data: dataType, conn, logger):
                 parent_depth = get_parent_depth(conn, parent_id)
 
                 if parent_depth_found(parent_depth):
-                    comment_rows = fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id)
+                    comment_rows = fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id, requestors_username=username)
                     comments_object = make_comments_object(comment_rows)
                     return generate_success_response(json.dumps(comments_object, default=str))
 
@@ -40,7 +42,7 @@ def get_comments(data: dataType, conn, logger):
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                comment_rows = fetch_comments(conn, item_name, comment_type, 0, depth, n, excluded_comment_ids)
+                comment_rows = fetch_comments(conn, item_name, comment_type, 0, depth, n, excluded_comment_ids, requestors_username=username)
                 comments_object = make_comments_object(comment_rows)
                 return generate_success_response(json.dumps(comments_object, default=str))
 
@@ -50,7 +52,7 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None):
+def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None, requestors_username:str = None):
     with conn.cursor() as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
@@ -109,22 +111,37 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
                 backtracked_comment_ids = flatten_result(ancestors_result)
                 comment_ids = comment_ids + backtracked_comment_ids
 
-            relevant_comments = fetch_relevant_comments(conn, comment_ids)
+            relevant_comments = fetch_relevant_comments(conn, comment_ids, requestors_username=requestors_username)
 
         return relevant_comments
 
-def fetch_relevant_comments(conn, comment_ids):
+def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
-        cur.execute(
-            '''
-                select id, timeStamp, username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent
-                from Comments left join CommentsClosure
-                on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
-                where id in %(commentIds)s
-                order by timeStamp desc
-            ''',
-            { 'commentIds': comment_ids}
-        )
+        if requestors_username == None:
+            cur.execute(
+                '''
+                    select id, timeStamp, username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent
+                    from Comments left join CommentsClosure
+                    on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
+                    where id in %(commentIds)s
+                    order by timeStamp desc
+                ''',
+                { 'commentIds': comment_ids}
+            )
+        elif requestors_username != None:
+            cur.execute(
+                '''
+                    select id, timeStamp, c.username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent, vote 
+                    from 
+                        (select * from Comments left join CommentsClosure
+                        on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
+                        where id in %(commentIds)s
+                        order by timeStamp desc) c
+                    left join UserCommentVotes ucv
+                    on (c.id = ucv.commentId) and ucv.username = %(requestorsUsername)s
+                ''',
+                { 'commentIds': comment_ids, 'requestorsUsername': requestors_username }
+            )
         conn.commit()
         return cur.fetchall()
 
@@ -147,6 +164,7 @@ def make_comments_object(rows):
         num_replies = row["numReplies"]
         ancestor_id = row["ancestor"]
         descendent_id = row["descendent"]
+        user_vote = row.get("vote")
 
         # tracking variables
         ancestor_tree_set_id = None
@@ -184,7 +202,8 @@ def make_comments_object(rows):
                 "commentType": comment_type,
                 "upVotes": up_votes,
                 "downVotes": down_votes,
-                "numReplies": num_replies
+                "numReplies": num_replies,
+                "userVote": None if (user_vote == None) else ord(user_vote)
             }
             set_comment_details(comments_object, ancestor_map, comment)
             filled_comments.add(comment_id)
@@ -282,6 +301,7 @@ def set_comment_details(comments_object, ancestor_map, comment):
     comment_object["upVotes"] = comment["upVotes"]
     comment_object["downVotes"] = comment["downVotes"]
     comment_object["numReplies"] = comment["numReplies"]
+    comment_object["userVote"] = comment["userVote"]
 
 def transform_comments_object(comments_object):
     transformed_comments_object = []
@@ -296,6 +316,7 @@ def transform_comments_object(comments_object):
             "upVotes": comment["upVotes"],
             "downVotes": comment["downVotes"],
             "numReplies": comment["numReplies"],
+            "userVote": comment["userVote"],
             "replies": replies
         }
         transformed_comments_object.append(top_level_comment)
@@ -315,6 +336,7 @@ def transform_comments_object_helper(comment_object_replies):
             "upVotes": comment["upVotes"],
             "downVotes": comment["downVotes"],
             "numReplies": comment["numReplies"],
+            "userVote": comment["userVote"],
             "replies": nested_replies
         })
     return replies
