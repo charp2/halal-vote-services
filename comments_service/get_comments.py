@@ -190,8 +190,11 @@ def make_comments_object(rows):
         elif ancestor_tree_set_id and not descendent_tree_set_id:
             handle_case_two(comments_object, ancestor_map, tree_sets, ancestor_id, ancestor_tree_set_id, descendent_id)
 
+        elif not ancestor_tree_set_id and descendent_tree_set_id:
+            handle_case_three(comments_object, ancestor_map, tree_sets, ancestor_id, descendent_id, descendent_tree_set_id)
+
         elif ancestor_tree_set_id and descendent_tree_set_id and ancestor_tree_set_id != descendent_tree_set_id:
-            handle_case_three(comments_object, ancestor_map, tree_sets, ancestor_id, ancestor_tree_set_id, descendent_id, descendent_tree_set_id)
+            handle_case_four(comments_object, ancestor_map, tree_sets, ancestor_id, ancestor_tree_set_id, descendent_id, descendent_tree_set_id)
 
         if not comment_id in filled_comments:
             comment = {
@@ -251,18 +254,39 @@ def handle_case_two(comments_object, ancestor_map, tree_sets, ancestor_id, ances
         "replies": {}
     }
 
+# descendent part of tree, but ancestor is not
+def handle_case_three(comments_object, ancestor_map, tree_sets, ancestor_id, descendent_id, descendent_tree_set_id):
+    for tree_id, tree_set in tree_sets:
+        if tree_id == descendent_tree_set_id:
+            tree_set.add(ancestor_id)
+            break
+
+    descendent_comment_object = comments_object[descendent_tree_set_id]
+    del descendent_comment_object['root']
+    comments_object[descendent_tree_set_id] = {
+        "root": ancestor_id,
+        "replies": {
+            descendent_id: descendent_comment_object
+        }
+    }
+
+    ancestor_map[descendent_id] = ancestor_id
+    ancestor_map[ancestor_id] = descendent_tree_set_id
+
 # ancestor and descendent are part of different trees
-def handle_case_three(comments_object, ancestor_map, tree_sets, ancestor_id, ancestor_tree_set_id, descendent_id, descendent_tree_set_id):
+def handle_case_four(comments_object, ancestor_map, tree_sets, ancestor_id, ancestor_tree_set_id, descendent_id, descendent_tree_set_id):
     for tree_id, tree_set in tree_sets:
         if tree_id == descendent_tree_set_id:
             descendent_tree_set = tree_set
             tree_sets.remove((tree_id, tree_set))
             break
 
+    index = 0
     for tree_id, tree_set in tree_sets:
         if tree_id == ancestor_tree_set_id:
-            tree_set = tree_set.union(descendent_tree_set)
+            tree_sets[index] = (tree_id, tree_set.union(descendent_tree_set))
             break
+        index += 1
 
     ancestor_map[descendent_id] = ancestor_id
 
