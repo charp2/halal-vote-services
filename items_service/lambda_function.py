@@ -9,6 +9,7 @@ import rds_config
 from items_service.add_item import add_item
 from items_service.delete_item import delete_item
 from items_service.get_items import get_items
+from items_service.search_items import search_items
 from items_service.vote_item import vote_item
 from utils import valid_user
 from utils import get_response_headers
@@ -24,7 +25,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-items"]
+no_session_token = ["/get-items", "/search-items"]
 
 # verify db connection
 try:
@@ -53,7 +54,9 @@ eventType = {
 # lambda entry point
 def handler(event: eventType, context):
     path = event['path']
-    requestBody = json.loads(event['body'])
+    if event['body']:
+        requestBody = json.loads(event['body'])
+    queryStringParams = event['queryStringParameters']
     requestHeaders = event['headers']
 
     if path not in no_session_token:
@@ -70,6 +73,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = get_items(requestBody, requestHeaders, conn, logger)
     elif (path == '/vote-item'):
         responseStatus, responseBody = vote_item(requestBody, conn, logger)
+    elif (path == '/search-items'):
+        responseStatus, responseBody = search_items(queryStringParams, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
