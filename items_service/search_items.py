@@ -22,14 +22,14 @@ def search_items(data: dataType, conn, logger):
         with conn.cursor() as cur:
             query = 'select itemName from Items where lower(itemName) like %(searchTermWB1)s or lower(itemName) like %(searchTermWB2)s limit %(limit)s'
             query_map = {}
-            query_map['searchTermWB1'] = search_term.lower() + "%" #WB = Word Bonudary
+            query_map['searchTermWB1'] = search_term.lower() + "%" #WB = Word Boundary
             query_map['searchTermWB2'] = "% " + search_term.lower() + "%"
             query_map['limit'] = limit
 
             cur.execute(query, query_map)
             conn.commit()
 
-            result = cur.fetchone()
+            result = cur.fetchall()
             responseBody = json.dumps(result, default=str)
             return generate_success_response(responseBody)
 
