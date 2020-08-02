@@ -9,6 +9,11 @@ from utils import flatten_result
 from comments_service.utils import get_parent_depth
 from comments_service.utils import parent_depth_found
 
+sort_query = '''
+    order by (25 * (upVotes + downVotes + 1)) / GREATEST(1, POWER(TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP()), 1/2)) desc,
+    timeStamp desc
+'''
+
 dataType = {
     "itemName": str,
     "username": str,
@@ -82,8 +87,7 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
             '''
             query_map['excludedCommentIds'] = excluded_comment_ids
 
-        query = query + '''
-            order by ( 2 * (upVotes + downVotes) ) / ( depth * ( POWER(TIMESTAMPDIFF(DAY,timeStamp,CURRENT_TIMESTAMP() ), 1/2) ) ) desc, timeStamp desc
+        query = query + sort_query + '''
             limit %(n)s
         '''
 
@@ -124,9 +128,8 @@ def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
                     from Comments left join CommentsClosure
                     on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                     where id in %(commentIds)s
-                    order by timeStamp desc
-                ''',
-                { 'commentIds': comment_ids}
+                ''' + sort_query,
+                { 'commentIds': comment_ids }
             )
         elif requestors_username != None:
             cur.execute(
@@ -136,7 +139,7 @@ def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
                         (select * from Comments left join CommentsClosure
                         on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                         where id in %(commentIds)s
-                        order by timeStamp desc) c
+                        ''' + sort_query + ''') c
                     left join UserCommentVotes ucv
                     on (c.id = ucv.commentId) and ucv.username = %(requestorsUsername)s
                 ''',
