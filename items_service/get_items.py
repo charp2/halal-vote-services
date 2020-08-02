@@ -42,19 +42,17 @@ def get_items(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['username'] = username
 
-                
-            if item_names != None:
+            if excluded_items != None and item_names == None:
+                query = query + '''
+                    where Items.itemName not in %(excludedItems)s
+                '''
+                query_map['excludedItems'] = excluded_items
+
+            if item_names != None and excluded_items == None:
                 query = query + '''
                     where Items.itemName in %(itemNames)s
                 '''
                 query_map['itemNames']  = item_names
-
-            if excluded_items != None:
-                query = query + '''
-                    where itemName not in %(excludedItems)s
-                '''
-                query_map['excludedItems'] = excluded_items
-
             else:
                 query = query + '''
                     limit %(offset)s, %(n)s
