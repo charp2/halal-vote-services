@@ -12,13 +12,15 @@ dataType = {
     'itemNames': [str],
     'n': int,
     'offset': int,
-    'username': str
+    'username': str,
+    "excludedItems": [str]
 }
 
 def get_items(data: dataType, request_headers: any, conn, logger):
     item_names = data.get('itemNames')
     n = data.get('n', sys.maxsize)
     offset = data.get('offset', 0)
+    excluded_items = data.get('excludedItems')
     username = data.get('username')
     sessiontoken = request_headers.get('sessiontoken', '')
 
@@ -46,6 +48,12 @@ def get_items(data: dataType, request_headers: any, conn, logger):
                     where Items.itemName in %(itemNames)s
                 '''
                 query_map['itemNames']  = item_names
+
+            if excluded_items != None:
+                query = query + '''
+                    where itemName not in %(excludedItems)s
+                '''
+                query_map['excludedItems'] = excluded_items
 
             else:
                 query = query + '''
