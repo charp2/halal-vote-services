@@ -16,13 +16,15 @@ def vote_item(data: dataType, conn, logger):
     item_name = data['itemName']
     vote = data['vote']
 
-    if vote != 0 and vote != 1:
-        return generate_error_response(400, "Ivalid vote passed in.")
+    if vote < -100 or vote > 100:
+        return generate_error_response(400, "Invalid vote passed in.")
     
     # Access DB
     try:
         with conn.cursor() as cur:
-            item_vote_field = 'halalVotes' if vote == 0 else 'haramVotes'
+            vote_field = 'halalVotes' if vote > 0 else 'haramVotes'
+            vote_abs = abs(vote)
+            prev_vote_abs = None
 
             cur.execute(
                 '''
@@ -31,79 +33,61 @@ def vote_item(data: dataType, conn, logger):
                 ''',
                 {'username': username, 'itemName': item_name}
             )
-            user_vote = cur.fetchone()
+            prev_vote = cur.fetchone()
 
-            vote_removed = False
+            query_set_section = ""
 
-            if user_vote != None:
-                user_vote = convert_bit_to_int(user_vote[0])
+            # Update Items table
+            if prev_vote != None:
+                prev_vote = prev_vote[0]
+                prev_vote_field = 'halalVotes' if prev_vote > 0 else 'haramVotes'
+                prev_vote_abs = abs(prev_vote)
 
-                if user_vote != vote:
-                    prev_item_vote_field = 'halalVotes' if vote == 1 else "haramVotes"
+                if prev_vote_field != vote_field:
+                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + prev_vote_field + " = " + prev_vote_field + " - %(prev_vote)s "
+                else:
+                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s - %(prev_vote)s"
 
-                    rows_affected = cur.execute(
+            else:
+                query_set_section = vote_field + " = " + vote_field + " + %(vote)s "
+
+            rows_affected = cur.execute(
+                '''
+                    update Items
+                    set ''' + query_set_section + '''
+                    where itemName = %(itemName)s
+                ''',
+                {'itemName': item_name, 'vote': vote_abs, 'prev_vote': prev_vote_abs}
+            )
+            conn.commit()
+
+            if rows_affected != 0:
+                # Update UserItemVotes table
+                if vote == 0:
+                    cur.execute(
                         '''
-                            update Items
-                            set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' + 1, ''' + prev_item_vote_field + ''' = ''' + prev_item_vote_field + ''' - 1
-                            where itemName = %(itemName)s
+                            delete from UserItemVotes
+                            where username = %(username)s and itemName = %(itemName)s
                         ''',
                         {'username': username, 'itemName': item_name}
                     )
                     conn.commit()
-
-                    if rows_affected == 0:
-                        return generate_error_response(404, "Item not found.")
 
                 else:
                     cur.execute(
                         '''
-                            update Items
-                            set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' - 1
-                            where itemName = %(itemName)s
+                            insert into UserItemVotes (username, itemName, vote)
+                            values (%(username)s, %(itemName)s, %(vote)s)
+                            ON DUPLICATE KEY UPDATE
+                            vote=%(vote)s
                         ''',
-                        {'username': username, 'itemName': item_name}
+                        {'username': username, 'itemName': item_name, 'vote': vote}
                     )
                     conn.commit()
-
-                    vote_removed = True
-
+                    
+                return generate_success_response(json.dumps({'updated': True}, default=str))
             else:
-                rows_affected = cur.execute(
-                    '''
-                        update Items
-                        set ''' + item_vote_field + ''' = ''' + item_vote_field + ''' + 1
-                        where itemName = %(itemName)s
-                    ''',
-                    {'username': username, 'itemName': item_name}
-                )
-                conn.commit()
-
-                if rows_affected == 0:
-                    return generate_error_response(404, "Item not found.")
-            
-            if vote_removed:
-                cur.execute(
-                    '''
-                        delete from UserItemVotes
-                        where username = %(username)s and itemName = %(itemName)s
-                    ''',
-                    {'username': username, 'itemName': item_name}
-                )
-                conn.commit()
-
-            else:
-                cur.execute(
-                    '''
-                        insert into UserItemVotes (username, itemName, vote)
-                        values (%(username)s, %(itemName)s, %(vote)s)
-                        ON DUPLICATE KEY UPDATE
-                        vote=%(vote)s
-                    ''',
-                    {'username': username, 'itemName': item_name, 'vote': vote}
-                )
-                conn.commit()
-                
-            return generate_success_response(json.dumps({'success': True}, default=str))
+                return generate_success_response(json.dumps({'updated': False}, default=str))
                     
 
     except Exception as e:
