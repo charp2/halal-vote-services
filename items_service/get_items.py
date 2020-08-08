@@ -37,7 +37,7 @@ def get_items(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Items.*, cast(UserItemVotes.vote as unsigned) as vote
+                    select Items.*, IFNULL(UserItemVotes.vote, 0) as vote
                     from Items left join UserItemVotes on Items.itemName = UserItemVotes.itemName and UserItemVotes.username = %(username)s
                 '''
                 query_map['username'] = username
