@@ -22,7 +22,7 @@ def vote_item(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
-            vote_field = 'halalVotes' if vote > 0 else 'haramVotes'
+            vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
             vote_abs = abs(vote)
             prev_vote_abs = None
 
@@ -40,7 +40,7 @@ def vote_item(data: dataType, conn, logger):
             # Update Items table
             if prev_vote != None:
                 prev_vote = prev_vote[0]
-                prev_vote_field = 'halalVotes' if prev_vote > 0 else 'haramVotes'
+                prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
                 prev_vote_abs = abs(prev_vote)
 
                 if prev_vote_field != vote_field:
@@ -49,7 +49,7 @@ def vote_item(data: dataType, conn, logger):
                     query_set_section = vote_field + " = " + vote_field + " + %(vote)s - %(prev_vote)s"
 
             else:
-                query_set_section = vote_field + " = " + vote_field + " + %(vote)s "
+                query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + "numVotes = numVotes + 1"
 
             rows_affected = cur.execute(
                 '''
