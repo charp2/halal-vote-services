@@ -42,11 +42,12 @@ def vote_item(data: dataType, conn, logger):
                 prev_vote = prev_vote[0]
                 prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
                 prev_vote_abs = abs(prev_vote)
+                num_votes_decrement = 1 if vote == 0 else 0
 
                 if prev_vote_field != vote_field:
-                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + prev_vote_field + " = " + prev_vote_field + " - %(prev_vote)s "
+                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + prev_vote_field + " = " + prev_vote_field + " - %(prev_vote)s, " + "numVotes = numVotes - " + str(num_votes_decrement)
                 else:
-                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s - %(prev_vote)s"
+                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s - %(prev_vote)s, " + "numVotes = numVotes - " + str(num_votes_decrement)
 
             else:
                 query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + "numVotes = numVotes + 1"
