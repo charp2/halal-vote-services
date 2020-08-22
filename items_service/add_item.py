@@ -24,9 +24,7 @@ def add_item(data: dataType, conn, logger):
             result = cur.fetchone()
             if result:
                 if result[0] == 1:
-                    cur.execute('insert into ItemDescriptions (itemName, username, description) values(%(itemName)s, %(username)s, %(description)s) on duplicate key update description=%(description)s', {'itemName': item_name, 'username': username, 'description': description})
-                    conn.commit()
-                    return generate_success_response(item_name)
+                    return generate_error_response(409, "Item already exists")
                 else:
                     cur.execute('insert into Items (itemName, username, halalPoints, haramPoints, numVotes) values(%(itemName)s, %(username)s, 0, 0, 0)', {'itemName': item_name, 'username': username})
                     cur.execute('insert into ItemDescriptions (itemName, username, description) values(%(itemName)s, %(username)s, %(description)s)', {'itemName': item_name, 'username': username, 'description': description})
