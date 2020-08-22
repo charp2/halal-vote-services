@@ -11,6 +11,7 @@ from items_service.delete_item import delete_item
 from items_service.get_items import get_items
 from items_service.search_items import search_items
 from items_service.vote_item import vote_item
+from items_service.get_item_descriptions import get_item_descriptions
 from utils import valid_user
 from utils import get_response_headers
 
@@ -25,7 +26,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-items", "/search-items"]
+no_session_token = ["/get-items", "/search-items", "/get-item-descriptions"]
 
 # verify db connection
 try:
@@ -75,6 +76,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = vote_item(requestBody, conn, logger)
     elif (path == '/search-items'):
         responseStatus, responseBody = search_items(queryStringParams, conn, logger)
+    elif (path == '/get-item-descriptions'):
+        responseStatus, responseBody = get_item_descriptions(queryStringParams, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
