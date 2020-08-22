@@ -16,7 +16,7 @@ def add_item(data: dataType, conn, logger):
             item_name = data['itemName']
             username = data['username']
 
-            cur.execute('insert into Items (itemName, username, halalVotes, haramVotes) values(%(itemName)s, %(username)s, 0, 0)', {'itemName': item_name, 'username': username})
+            cur.execute('insert into Items (itemName, username, halalPoints, haramPoints, numVotes) values(%(itemName)s, %(username)s, 0, 0, 0)', {'itemName': item_name, 'username': username})
             conn.commit()
 
             return generate_success_response(json.dumps(item_name, default=str))
