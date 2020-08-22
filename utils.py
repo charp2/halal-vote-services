@@ -12,10 +12,10 @@ response_headers = {'Access-Control-Allow-Origin': '*'}
 
 def valid_user(username: str, session_token: str, conn, logger):
     if not username:
-        return generate_error_response(500, "Invalid username passed in")
+        return generate_error_response(400, "no username passed in")
 
     if not session_token:
-        return generate_error_response(500, "Invalid sessiontoken passed in")
+        return generate_error_response(400, "no sessiontoken passed in")
 
     try:
         with conn.cursor() as cur:
@@ -26,14 +26,14 @@ def valid_user(username: str, session_token: str, conn, logger):
             if results:
                 retrieved_session_token, session_timestamp, active_status = results
             else:
-                return generate_error_response(404, "User not found")
+                return generate_error_response(401, "User not found")
 
             if active_status != "ACTIVE":
-                return generate_error_response(403, "User is Not ACTIVE")
+                return generate_error_response(401, "User is Not ACTIVE")
             elif session_token != retrieved_session_token:
                 return generate_error_response(401, "User Not Authorized")
             elif is_session_expired(session_timestamp):
-                return generate_error_response(440, "Session Expired")
+                return generate_error_response(401, "Session Expired")
             else:
                 return generate_success_response("")
 
