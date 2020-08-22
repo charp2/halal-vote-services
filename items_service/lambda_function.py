@@ -12,6 +12,7 @@ from items_service.get_items import get_items
 from items_service.search_items import search_items
 from items_service.vote_item import vote_item
 from items_service.get_item_descriptions import get_item_descriptions
+from items_service.add_item_description import add_item_description
 from utils import valid_user
 from utils import get_response_headers
 
@@ -78,6 +79,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = search_items(queryStringParams, conn, logger)
     elif (path == '/get-item-descriptions'):
         responseStatus, responseBody = get_item_descriptions(queryStringParams, conn, logger)
+    elif (path == '/add-item-description'):
+        responseStatus, responseBody = add_item_description(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
