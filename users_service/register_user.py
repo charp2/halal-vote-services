@@ -39,4 +39,4 @@ def register_user(data: dataType, conn, logger):
     except Exception as e:
         return generate_error_response(500, str(e))
 
-    return generate_success_response(json.dumps(username, default=str))
+    return generate_success_response(username)

@@ -43,7 +43,7 @@ def login(data: dataType, conn, logger):
                 else:
                     new_session_token = fetched_session_token
 
-                return generate_success_response(json.dumps(new_session_token, default=str))
+                return generate_success_response(new_session_token)
             else:
                 return generate_error_response(401, "Password is incorrect")
 

@@ -28,7 +28,7 @@ def delete_item(data: dataType, conn, logger):
             if cur.rowcount > 0:
                 cur.execute(
                     '''select id from Comments where itemName=%(itemName)s''',
-                     {'itemName': item_name}
+                    {'itemName': item_name}
                 )
                 result = cur.fetchall()
 

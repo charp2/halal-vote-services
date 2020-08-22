@@ -38,7 +38,7 @@ def delete_comment(data: dataType, conn, logger):
 
                 conn.commit()
 
-            return generate_success_response(json.dumps({ "deletedId": id, "psuedoDelete": 1 }, default=str))
+            return generate_success_response({ "deletedId": id, "psuedoDelete": 1 })
 
         else:
             with conn.cursor() as cur:
@@ -68,7 +68,7 @@ def delete_comment(data: dataType, conn, logger):
 
                 conn.commit()
 
-            return generate_success_response(json.dumps({ "deletedId": id, "psuedoDelete": 0 }, default=str))
+            return generate_success_response({ "deletedId": id, "psuedoDelete": 0 })
                 
 
     except Exception as e:

@@ -41,7 +41,7 @@ def get_comments(data: dataType, conn, logger):
                 if parent_depth_found(parent_depth):
                     comment_rows = fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id, requestors_username=username)
                     comments_object = make_comments_object(comment_rows)
-                    return generate_success_response(json.dumps(comments_object, default=str))
+                    return generate_success_response(comments_object)
 
                 else:
                     return generate_error_response(404, "parentId does not exist")
@@ -49,7 +49,7 @@ def get_comments(data: dataType, conn, logger):
             else:
                 comment_rows = fetch_comments(conn, item_name, comment_type, 0, depth, n, excluded_comment_ids, requestors_username=username)
                 comments_object = make_comments_object(comment_rows)
-                return generate_success_response(json.dumps(comments_object, default=str))
+                return generate_success_response(comments_object)
 
     except Exception as e:
         return generate_error_response(500, str(e))

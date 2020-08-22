@@ -19,7 +19,7 @@ def add_item(data: dataType, conn, logger):
             cur.execute('insert into Items (itemName, username, halalPoints, haramPoints, numVotes) values(%(itemName)s, %(username)s, 0, 0, 0)', {'itemName': item_name, 'username': username})
             conn.commit()
 
-            return generate_success_response(json.dumps(item_name, default=str))
+            return generate_success_response(item_name)
 
     except Exception as e:
         return generate_error_response(500, str(e))

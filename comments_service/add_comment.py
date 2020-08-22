@@ -37,7 +37,7 @@ def add_comment(data: dataType, conn, logger):
         if is_top_level_comment(parent_id):
             new_comment = insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
             print(new_comment)
-            return generate_success_response(json.dumps(new_comment, default=str))
+            return generate_success_response(new_comment)
 
         else:
             parent_depth = get_parent_depth(conn, parent_id)
@@ -46,7 +46,7 @@ def add_comment(data: dataType, conn, logger):
 
                 update_closure_table(conn, parent_id, new_comment["id"])
 
-                return generate_success_response(json.dumps(new_comment, default=str))
+                return generate_success_response(new_comment)
 
             else:
                 return generate_error_response(404, "parentId does not exist")

@@ -64,8 +64,7 @@ def get_items(data: dataType, request_headers: any, conn, logger):
             conn.commit()
 
             result = cur.fetchall()
-            responseBody = json.dumps(result, default=str)
-            return generate_success_response(responseBody)
+            return generate_success_response(result)
 
     except Exception as e:
         return generate_error_response(500, str(e))

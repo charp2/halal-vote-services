@@ -87,9 +87,9 @@ def vote_item(data: dataType, conn, logger):
                     )
                     conn.commit()
                     
-                return generate_success_response(json.dumps({'updated': True}, default=str))
+                return generate_success_response({'updated': True})
             else:
-                return generate_success_response(json.dumps({'updated': False}, default=str))
+                return generate_success_response({'updated': False})
                     
 
     except Exception as e:

@@ -2,6 +2,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
+import json
 
 # logging config
 logger = logging.getLogger()
@@ -41,11 +42,12 @@ def valid_user(username: str, session_token: str, conn, logger):
 
 def generate_error_response(status_code: int, error_msg: str):
     logger.error(error_msg)
-    return status_code, error_msg
+    return status_code, json.dumps({ 'message': error_msg }, default=str)
 
-def generate_success_response(msg: str):
-    logger.info(msg)
-    return 200, msg
+def generate_success_response(data: object):
+    dataJson = json.dumps(data, default=str)
+    logger.info(dataJson)
+    return 200, dataJson
 
 def generate_timestamp():
     ts = time.time()
