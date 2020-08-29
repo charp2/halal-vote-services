@@ -7,13 +7,13 @@ from utils import generate_success_response
 from utils import convert_bit_to_int
 
 dataType = {
-    "itemName": str,
+    "topicTitle": str,
     "username": str,
     "vote": int
 }
-def vote_item(data: dataType, conn, logger):
+def vote_topic(data: dataType, conn, logger):
     username = data['username']
-    item_name = data['itemName']
+    topic_title = data['topicTitle']
     vote = data['vote']
 
     if vote < -100 or vote > 100:
@@ -28,16 +28,16 @@ def vote_item(data: dataType, conn, logger):
 
             cur.execute(
                 '''
-                    select vote from UserItemVotes
-                    where username = %(username)s and itemName = %(itemName)s
+                    select vote from UserTopicVotes
+                    where username = %(username)s and topicTitle = %(topicTitle)s
                 ''',
-                {'username': username, 'itemName': item_name}
+                {'username': username, 'topicTitle': topic_title}
             )
             prev_vote = cur.fetchone()
 
             query_set_section = ""
 
-            # Update Items table
+            # Update Topics table
             if prev_vote != None:
                 prev_vote = prev_vote[0]
                 prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
@@ -55,35 +55,35 @@ def vote_item(data: dataType, conn, logger):
 
             rows_affected = cur.execute(
                 '''
-                    update Items
+                    update Topics
                     set ''' + query_set_section + '''
-                    where itemName = %(itemName)s
+                    where topicTitle = %(topicTitle)s
                 ''',
-                {'itemName': item_name, 'vote': vote_abs, 'prev_vote': prev_vote_abs}
+                {'topicTitle': topic_title, 'vote': vote_abs, 'prev_vote': prev_vote_abs}
             )
             conn.commit()
 
             if rows_affected != 0:
-                # Update UserItemVotes table
+                # Update UserTopicVotes table
                 if vote == 0:
                     cur.execute(
                         '''
-                            delete from UserItemVotes
-                            where username = %(username)s and itemName = %(itemName)s
+                            delete from UserTopicVotes
+                            where username = %(username)s and topicTitle = %(topicTitle)s
                         ''',
-                        {'username': username, 'itemName': item_name}
+                        {'username': username, 'topicTitle': topic_title}
                     )
                     conn.commit()
 
                 else:
                     cur.execute(
                         '''
-                            insert into UserItemVotes (username, itemName, vote)
-                            values (%(username)s, %(itemName)s, %(vote)s)
+                            insert into UserTopicVotes (username, topicTitle, vote)
+                            values (%(username)s, %(topicTitle)s, %(vote)s)
                             ON DUPLICATE KEY UPDATE
                             vote=%(vote)s
                         ''',
-                        {'username': username, 'itemName': item_name, 'vote': vote}
+                        {'username': username, 'topicTitle': topic_title, 'vote': vote}
                     )
                     conn.commit()
                     

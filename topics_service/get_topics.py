@@ -9,25 +9,25 @@ from utils import generate_success_response
 from utils import valid_user
 
 dataType = {
-    'itemNames': [str],
+    'topicTitles': [str],
     'n': int,
     'offset': int,
     'username': str,
-    "excludedItems": [str]
+    "excludedTopics": [str]
 }
 
-def get_items(data: dataType, request_headers: any, conn, logger):
-    item_names = data.get('itemNames')
+def get_topics(data: dataType, request_headers: any, conn, logger):
+    topic_titles = data.get('topicTitles')
     n = data.get('n', sys.maxsize)
     offset = data.get('offset', 0)
-    excluded_items = data.get('excludedItems')
+    excluded_topics = data.get('excludedTopics')
     username = data.get('username')
     sessiontoken = request_headers.get('sessiontoken', '')
 
     # Access DB
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
-            query = 'select *, null as vote from Items'
+            query = 'select *, null as vote from Topics'
             query_map = {}
 
             if username != None:
@@ -37,22 +37,22 @@ def get_items(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Items.*, IFNULL(UserItemVotes.vote, 0) as vote
-                    from Items left join UserItemVotes on Items.itemName = UserItemVotes.itemName and UserItemVotes.username = %(username)s
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote
+                    from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s
                 '''
                 query_map['username'] = username
 
-            if excluded_items != None and item_names == None:
+            if excluded_topics != None and topic_titles == None:
                 query = query + '''
-                    where Items.itemName not in %(excludedItems)s
+                    where Topics.topicTitle not in %(excludedTopics)s
                 '''
-                query_map['excludedItems'] = excluded_items
+                query_map['excludedTopics'] = excluded_topics
 
-            if item_names != None and excluded_items == None:
+            if topic_titles != None and excluded_topics == None:
                 query = query + '''
-                    where Items.itemName in %(itemNames)s
+                    where Topics.topicTitle in %(topicTitles)s
                 '''
-                query_map['itemNames']  = item_names
+                query_map['topicTitles']  = topic_titles
             else:
                 query = query + '''
                     limit %(offset)s, %(n)s

@@ -6,13 +6,13 @@ import json
 
 # our imports
 import rds_config
-from items_service.add_item import add_item
-from items_service.delete_item import delete_item
-from items_service.get_items import get_items
-from items_service.search_items import search_items
-from items_service.vote_item import vote_item
-from items_service.get_item_descriptions import get_item_descriptions
-from items_service.add_item_description import add_item_description
+from topics_service.add_topic import add_topic
+from topics_service.delete_topic import delete_topic
+from topics_service.get_topics import get_topics
+from topics_service.search_topics import search_topics
+from topics_service.vote_topic import vote_topic
+from topics_service.get_topic_descriptions import get_topic_descriptions
+from topics_service.add_topic_description import add_topic_description
 from utils import valid_user
 from utils import get_response_headers
 
@@ -27,7 +27,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-items", "/search-items", "/get-item-descriptions"]
+no_session_token = ["/get-topics", "/search-topics", "/get-topic-descriptions"]
 
 # verify db connection
 try:
@@ -67,20 +67,20 @@ def handler(event: eventType, context):
         if status_code != 200:
             return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
 
-    if (path == '/add-item'):
-        responseStatus, responseBody = add_item(requestBody, conn, logger)
-    elif (path == '/delete-item'):
-        responseStatus, responseBody = delete_item(requestBody, conn, logger)
-    elif (path == '/get-items'):
-        responseStatus, responseBody = get_items(requestBody, requestHeaders, conn, logger)
-    elif (path == '/vote-item'):
-        responseStatus, responseBody = vote_item(requestBody, conn, logger)
-    elif (path == '/search-items'):
-        responseStatus, responseBody = search_items(queryStringParams, conn, logger)
-    elif (path == '/get-item-descriptions'):
-        responseStatus, responseBody = get_item_descriptions(queryStringParams, conn, logger)
-    elif (path == '/add-item-description'):
-        responseStatus, responseBody = add_item_description(requestBody, conn, logger)
+    if (path == '/add-topic'):
+        responseStatus, responseBody = add_topic(requestBody, conn, logger)
+    elif (path == '/delete-topic'):
+        responseStatus, responseBody = delete_topic(requestBody, conn, logger)
+    elif (path == '/get-topics'):
+        responseStatus, responseBody = get_topics(requestBody, requestHeaders, conn, logger)
+    elif (path == '/vote-topic'):
+        responseStatus, responseBody = vote_topic(requestBody, conn, logger)
+    elif (path == '/search-topics'):
+        responseStatus, responseBody = search_topics(queryStringParams, conn, logger)
+    elif (path == '/get-topic-descriptions'):
+        responseStatus, responseBody = get_topic_descriptions(queryStringParams, conn, logger)
+    elif (path == '/add-topic-description'):
+        responseStatus, responseBody = add_topic_description(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 

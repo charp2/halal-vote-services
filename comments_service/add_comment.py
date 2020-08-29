@@ -12,22 +12,22 @@ from comments_service.utils import comment_type_to_num_comments_type_dict
 dataType = {
     "parentId": int,
     "username": str,
-    "itemName": str,
+    "topicTitle": str,
     "comment": str,
     "commentType": str
 }
 def add_comment(data: dataType, conn, logger):
     parent_id = data.get('parentId')
     username = data.get('username')
-    item_name = data.get('itemName')
+    topic_title = data.get('topicTitle')
     comment = data.get('comment')
     comment_type = data.get('commentType', 'OTHER')
 
     if not username:
         return generate_error_response(500, "Invalid username passed in")
 
-    if not item_name:
-        return generate_error_response(500, "Invalid itemName passed in")
+    if not topic_title:
+        return generate_error_response(500, "Invalid topicTitle passed in")
     
     if not comment:
         return generate_error_response(500, "Invalid comment passed in")
@@ -35,14 +35,14 @@ def add_comment(data: dataType, conn, logger):
     # Access DB
     try:
         if is_top_level_comment(parent_id):
-            new_comment = insert_comment(conn, parent_id, item_name, username, comment, comment_type, 1)
+            new_comment = insert_comment(conn, parent_id, topic_title, username, comment, comment_type, 1)
             print(new_comment)
             return generate_success_response(new_comment)
 
         else:
             parent_depth = get_parent_depth(conn, parent_id)
             if parent_depth_found(parent_depth):
-                new_comment = insert_comment(conn, parent_id, item_name, username, comment, comment_type, parent_depth + 1, top_level=False)
+                new_comment = insert_comment(conn, parent_id, topic_title, username, comment, comment_type, parent_depth + 1, top_level=False)
 
                 update_closure_table(conn, parent_id, new_comment["id"])
 
@@ -57,24 +57,24 @@ def add_comment(data: dataType, conn, logger):
 def is_top_level_comment(parent_id):
     return parent_id == None
 
-def insert_comment(conn, parent_id, item_name, username, comment, comment_type, depth, top_level=True):
+def insert_comment(conn, parent_id, topic_title, username, comment, comment_type, depth, top_level=True):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         cur.execute(
             '''
-            insert into Comments (itemName, username, comment, commentType, depth) 
-            values(%(itemName)s, %(username)s, %(comment)s, %(commentType)s, %(depth)s)
+            insert into Comments (topicTitle, username, comment, commentType, depth) 
+            values(%(topicTitle)s, %(username)s, %(comment)s, %(commentType)s, %(depth)s)
             ''', 
-            {'itemName': item_name, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth}
+            {'topicTitle': topic_title, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth}
         )
         if top_level:
             num_comments_type = comment_type_to_num_comments_type_dict[comment_type]
             cur.execute(
                 '''
-                Update Items
+                Update Topics
                 Set {} = {} + 1
-                Where itemName = %(itemName)s
+                Where topicTitle = %(topicTitle)s
                 '''.format(num_comments_type, num_comments_type),
-                { "itemName": item_name }
+                { "topicTitle": topic_title }
             )
         else:
             cur.execute(

@@ -15,7 +15,7 @@ sort_query = '''
 '''
 
 dataType = {
-    "itemName": str,
+    "topicTitle": str,
     "username": str,
     "commentType": str,
     "parentId": int,
@@ -26,7 +26,7 @@ dataType = {
 def get_comments(data: dataType, conn, logger):
     # Access DB
     try:
-        item_name = data.get('itemName')
+        topic_title = data.get('topicTitle')
         username = data.get('username')
         comment_type = data.get('commentType')
         parent_id = data.get('parentId')
@@ -39,7 +39,7 @@ def get_comments(data: dataType, conn, logger):
                 parent_depth = get_parent_depth(conn, parent_id)
 
                 if parent_depth_found(parent_depth):
-                    comment_rows = fetch_comments(conn, item_name, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id, requestors_username=username)
+                    comment_rows = fetch_comments(conn, topic_title, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id, requestors_username=username)
                     comments_object = make_comments_object(comment_rows)
                     return generate_success_response(comments_object)
 
@@ -47,7 +47,7 @@ def get_comments(data: dataType, conn, logger):
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                comment_rows = fetch_comments(conn, item_name, comment_type, 0, depth, n, excluded_comment_ids, requestors_username=username)
+                comment_rows = fetch_comments(conn, topic_title, comment_type, 0, depth, n, excluded_comment_ids, requestors_username=username)
                 comments_object = make_comments_object(comment_rows)
                 return generate_success_response(comments_object)
 
@@ -57,7 +57,7 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None, requestors_username:str = None):
+def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None, requestors_username:str = None):
     with conn.cursor() as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
@@ -72,9 +72,9 @@ def fetch_comments(conn, item_name, comment_type, start_depth, end_depth, n, exc
         else:
             query = '''
                 select * from Comments
-                where itemName=%(itemName)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
+                where topicTitle=%(topicTitle)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
             '''
-            query_map['itemName'] = item_name
+            query_map['topicTitle'] = topic_title
             query_map['commentType'] = comment_type
 
         if excluded_comment_ids:

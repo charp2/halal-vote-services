@@ -8,13 +8,13 @@ from utils import generate_success_response
 from comments_service.utils import comment_type_to_num_comments_type_dict
 
 dataType = {
-    "itemName": str,
+    "topicTitle": str,
     "username": str,
     "id": int,
     "commentType": str,
 }
 def delete_comment(data: dataType, conn, logger):
-    item_name = data.get('itemName')
+    topic_title = data.get('topicTitle')
     username = data.get('username')
     id = data.get('id')
     comment_type = data.get('commentType')
@@ -55,8 +55,8 @@ def delete_comment(data: dataType, conn, logger):
                 else:
                     num_comments_type = comment_type_to_num_comments_type_dict[comment_type]
                     cur.execute(
-                        '''UPDATE Items SET {} = {} - 1 WHERE itemName=%(itemName)s'''.format(num_comments_type, num_comments_type),
-                        { 'id': id, 'itemName': item_name }
+                        '''UPDATE Topics SET {} = {} - 1 WHERE topicTitle=%(topicTitle)s'''.format(num_comments_type, num_comments_type),
+                        { 'id': id, 'topicTitle': topic_title }
                     )
                 if cur.rowcount > 0:
                     cur.execute(

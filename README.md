@@ -18,7 +18,7 @@ The updateFunction script contains a series of bash commands which will update t
 Now you can run `~/halal-vote-services$ ./updateFunction {service} {aws_password}` anytime code is updated.
 
 Note that the updateFunction script takes two arguments- 
-1) The name of the lambda you want to update (`items` or `users`)
+1) The name of the lambda you want to update (`topics`, `comment`, `users`)
 2) The aws password for a user account which has permission to update the lambda
 
 *MAKE SURE YOU GIVE THE updateFunction SCRIPT PERSMISSION TO EXECUTE BY RUNNING `chmod +x ./updateFunction`*

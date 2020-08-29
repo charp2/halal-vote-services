@@ -13,14 +13,14 @@ dataType = {
     'limit': int
 }
 
-def search_items(data: dataType, conn, logger):
+def search_topics(data: dataType, conn, logger):
     search_term = data.get('searchTerm')
     limit = int(data.get('limit', 5))
 
     # Access DB
     try:
         with conn.cursor() as cur:
-            query = 'select itemName from Items where lower(itemName) like %(searchTermWB1)s or lower(itemName) like %(searchTermWB2)s limit %(limit)s'
+            query = 'select topicTitle from Topics where lower(topicTitle) like %(searchTermWB1)s or lower(topicTitle) like %(searchTermWB2)s limit %(limit)s'
             query_map = {}
             query_map['searchTermWB1'] = search_term.lower() + "%" #WB = Word Boundary
             query_map['searchTermWB2'] = "% " + search_term.lower() + "%"
