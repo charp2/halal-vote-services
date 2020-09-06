@@ -43,6 +43,12 @@ def delete_topic(data: dataType, conn, logger):
                         '''delete from CommentsClosure where ancestor in %(ids)s or descendent in %(ids)s''',
                         {'ids': comment_ids}
                     )
+                
+                cur.execute(
+                    '''delete from TopicImages where topicTitle=%(topicTitle)s''',
+                    {'topicTitle': topic_title}
+                )
+                
 
                 conn.commit()
                 return generate_success_response("Removed Topic '%s' from Topics table" %(topic_title))
