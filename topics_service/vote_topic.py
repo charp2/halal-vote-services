@@ -1,5 +1,6 @@
 # standard python imports
 import json
+import pymysql
 
 # our imports
 from utils import generate_error_response
@@ -86,10 +87,19 @@ def vote_topic(data: dataType, conn, logger):
                         {'username': username, 'topicTitle': topic_title, 'vote': vote}
                     )
                     conn.commit()
-                    
-                return generate_success_response({'updated': True})
+                
+                with conn.cursor(pymysql.cursors.DictCursor) as dict_cur:
+                    dict_cur.execute(
+                        '''
+                            select * from Topics where topicTitle = %(topicTitle)s
+                        ''',
+                        {'topicTitle': topic_title}
+                    )
+                    conn.commit()
+                    result = dict_cur.fetchall()[0]
+                    return generate_success_response(result)
             else:
-                return generate_success_response({'updated': False})
+                return generate_success_response({'noUpdates': True})
                     
 
     except Exception as e:
