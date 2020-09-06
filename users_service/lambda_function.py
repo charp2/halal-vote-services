@@ -10,6 +10,9 @@ from users_service.register_user import register_user
 from users_service.activate_user import activate_user
 from users_service.login import login
 from users_service.logout import logout
+from users_service.user_created_topics import user_created_topics
+from users_service.user_voted_topics import user_voted_topics
+from users_service.user_comments import user_comments
 from utils import valid_user
 from utils import get_response_headers
 
@@ -23,7 +26,7 @@ db_name = rds_config.db_name
 logger = logging.getLogger()
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/activate-user", "/login", "/logout"]
+no_session_token = ["/register-user", "/activate-user", "/login", "/logout", "/user-created-topics", "/user-voted-topics", "/user-comments"]
 
 # verify db connection
 try:
@@ -75,6 +78,12 @@ def handler(event: eventType, context):
         responseStatus, responseBody = login(requestBody, conn, logger)
     elif path == '/logout':
         responseStatus, responseBody = logout(requestBody, requestHeaders['sessionToken'], conn, logger)
+    elif path == '/user-created-topics':
+        responseStatus, responseBody = user_created_topics(requestParams, requestHeaders, conn, logger)
+    elif path == '/user-voted-topics':
+        responseStatus, responseBody = user_voted_topics(requestParams, requestHeaders, conn, logger)
+    elif path == '/user-comments':
+        responseStatus, responseBody = user_comments(requestParams, requestHeaders, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
