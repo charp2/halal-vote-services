@@ -8,7 +8,7 @@ from utils import generate_success_response
 dataType = {
     "topicTitle": str,
     "username": str,
-    "description": str
+    "image": str
 }
 def add_topic(data: dataType, conn, logger):
     # Access DB
@@ -16,7 +16,7 @@ def add_topic(data: dataType, conn, logger):
         with conn.cursor() as cur:
             topic_title = data['topicTitle']
             username = data['username']
-            description = data['description']
+            image = data['image']
 
             cur.execute('select exists(select * from Topics where topicTitle=%(topicTitle)s)', {'topicTitle': topic_title})
             conn.commit()
@@ -27,7 +27,7 @@ def add_topic(data: dataType, conn, logger):
                     return generate_error_response(409, "Topic already exists")
                 else:
                     cur.execute('insert into Topics (topicTitle, username, halalPoints, haramPoints, numVotes) values(%(topicTitle)s, %(username)s, 0, 0, 0)', {'topicTitle': topic_title, 'username': username})
-                    cur.execute('insert into TopicDescriptions (topicTitle, username, description) values(%(topicTitle)s, %(username)s, %(description)s)', {'topicTitle': topic_title, 'username': username, 'description': description})
+                    cur.execute('insert into TopicImages (topicTitle, username, image) values(%(topicTitle)s, %(username)s, %(image)s)', {'topicTitle': topic_title, 'username': username, 'image': image})
                     conn.commit()
                     return generate_success_response(topic_title)
             else:

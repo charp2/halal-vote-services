@@ -11,8 +11,8 @@ from topics_service.delete_topic import delete_topic
 from topics_service.get_topics import get_topics
 from topics_service.search_topics import search_topics
 from topics_service.vote_topic import vote_topic
-from topics_service.get_topic_descriptions import get_topic_descriptions
-from topics_service.add_topic_description import add_topic_description
+from topics_service.get_topic_images import get_topic_images
+from topics_service.add_topic_image import add_topic_image
 from utils import valid_user
 from utils import get_response_headers
 
@@ -27,7 +27,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-topics", "/search-topics", "/get-topic-descriptions"]
+no_session_token = ["/get-topics", "/search-topics", "/get-topic-images"]
 
 # verify db connection
 try:
@@ -77,10 +77,10 @@ def handler(event: eventType, context):
         responseStatus, responseBody = vote_topic(requestBody, conn, logger)
     elif (path == '/search-topics'):
         responseStatus, responseBody = search_topics(queryStringParams, conn, logger)
-    elif (path == '/get-topic-descriptions'):
-        responseStatus, responseBody = get_topic_descriptions(queryStringParams, conn, logger)
-    elif (path == '/add-topic-description'):
-        responseStatus, responseBody = add_topic_description(requestBody, conn, logger)
+    elif (path == '/get-topic-images'):
+        responseStatus, responseBody = get_topic_images(queryStringParams, conn, logger)
+    elif (path == '/add-topic-image'):
+        responseStatus, responseBody = add_topic_image(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 

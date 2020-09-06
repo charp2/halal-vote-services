@@ -8,15 +8,15 @@ from utils import generate_success_response
 dataType = {
     "topicTitle": str,
     "username": str,
-    "description": str
+    "image": str
 }
-def add_topic_description(data: dataType, conn, logger):
+def add_topic_image(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
             topic_title = data['topicTitle']
             username = data['username']
-            description = data['description']
+            image = data['image']
 
             cur.execute('select exists(select * from Topics where topicTitle=%(topicTitle)s)', {'topicTitle': topic_title})
             conn.commit()
@@ -24,7 +24,7 @@ def add_topic_description(data: dataType, conn, logger):
             result = cur.fetchone()
             if result:
                 if result[0] == 1:
-                    cur.execute('insert into TopicDescriptions (topicTitle, username, description) values(%(topicTitle)s, %(username)s, %(description)s) on duplicate key update description=%(description)s', {'topicTitle': topic_title, 'username': username, 'description': description})
+                    cur.execute('insert into TopicImages (topicTitle, username, image) values(%(topicTitle)s, %(username)s, %(image)s) on duplicate key update image=%(image)s', {'topicTitle': topic_title, 'username': username, 'image': image})
                     conn.commit()
                     return generate_success_response(topic_title)
                 else:
