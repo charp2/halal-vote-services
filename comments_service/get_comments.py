@@ -21,7 +21,8 @@ dataType = {
     "parentId": int,
     "depth": int,
     "n": int,
-    "excludedCommentIds": [int]
+    "excludedCommentIds": [int],
+    "singleCommentId": int,
 }
 def get_comments(data: dataType, conn, logger):
     # Access DB
@@ -33,6 +34,7 @@ def get_comments(data: dataType, conn, logger):
         depth = data.get('depth')
         n = data.get('n')
         excluded_comment_ids = list(map(str, data.get('excludedCommentIds', [])))
+        single_comment_id = data.get('singleCommentId')
 
         with conn.cursor() as cur:
             if is_show_more_request(parent_id):
@@ -47,7 +49,7 @@ def get_comments(data: dataType, conn, logger):
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                comment_rows = fetch_comments(conn, topic_title, comment_type, 0, depth, n, excluded_comment_ids, requestors_username=username)
+                comment_rows = fetch_comments(conn, topic_title, comment_type, 0, depth, n, excluded_comment_ids, single_comment_id, requestors_username=username)
                 comments_object = make_comments_object(comment_rows)
                 return generate_success_response(comments_object)
 
@@ -57,7 +59,7 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, parent_id=None, requestors_username:str = None):
+def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, single_comment_id, parent_id=None, requestors_username:str = None):
     with conn.cursor() as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
@@ -86,6 +88,13 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
                 where c.id not in %(excludedCommentIds)s and c.ancestor is NULL
             '''
             query_map['excludedCommentIds'] = excluded_comment_ids
+
+        if single_comment_id:
+            query = '''
+                select * from Comments
+                where topicTitle=%(topicTitle)s and commentType=%(commentType)s and id=%(singleCommentId)s
+            '''
+            query_map['singleCommentId'] = single_comment_id
 
         query = query + sort_query + '''
             limit %(n)s
