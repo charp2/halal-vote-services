@@ -59,7 +59,7 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, single_comment_id, parent_id=None, requestors_username:str = None):
+def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, single_comment_id=None, parent_id=None, requestors_username:str = None):
     with conn.cursor() as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
