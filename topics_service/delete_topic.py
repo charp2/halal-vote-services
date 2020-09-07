@@ -49,12 +49,11 @@ def delete_topic(data: dataType, conn, logger):
                     {'topicTitle': topic_title}
                 )
                 
-
                 conn.commit()
-                return generate_success_response("Removed Topic '%s' from Topics table" %(topic_title))
+                return generate_success_response("Removed topic '%s'" %(topic_title))
 
             else:
-                return generate_error_response(500, "Unsuccesful delete attempt")
+                return generate_error_response(404, "Topic not found")
 
     except Exception as e:
         return generate_error_response(500, str(e))
