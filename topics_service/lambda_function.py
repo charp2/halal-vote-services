@@ -14,6 +14,7 @@ from topics_service.vote_topic import vote_topic
 from topics_service.get_topic_images import get_topic_images
 from topics_service.add_topic_image import add_topic_image
 from topics_service.delete_topic_image import delete_topic_image
+from topics_service.update_topic_image_like import update_topic_image_like
 from utils import valid_user
 from utils import get_response_headers
 
@@ -84,6 +85,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = add_topic_image(requestBody, conn, logger)
     elif (path == '/delete-topic-image'):
         responseStatus, responseBody = delete_topic_image(requestBody, conn, logger)
+    elif (path == '/update-topic-image-like'):
+        responseStatus, responseBody = update_topic_image_like(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
