@@ -15,7 +15,7 @@ def get_topic_images(data: dataType, conn, logger):
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             topic_title = data['topicTitle']
 
-            cur.execute('select username, image from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
+            cur.execute('select username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
             conn.commit()
 
             result = cur.fetchall()
