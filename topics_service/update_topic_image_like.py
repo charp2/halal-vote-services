@@ -18,14 +18,24 @@ def update_topic_image_like(data: dataType, conn, logger):
             username = data['username']
             like = data['like']
 
-            rows = cur.execute('select topicTitle from Topics where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
+            num_rows = cur.execute('select topicTitle from Topics where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
 
-            if rows != 0:
+            if num_rows != 0:
+                change = ""
                 if like:
-                    cur.execute('insert ignore into UserTopicImageLikes (topicTitle, username) values(%(topicTitle)s, %(username)s)', {'topicTitle': topic_title, 'username': username})
-                else:
-                    cur.execute('delete from UserTopicImageLikes where topicTitle=%(topicTitle)s and username=%(username)s', {'topicTitle': topic_title, 'username': username})
+                    rows_affected = cur.execute('insert ignore into UserTopicImageLikes (topicTitle, username) values(%(topicTitle)s, %(username)s)', {'topicTitle': topic_title, 'username': username})
 
+                    if rows_affected != 0:
+                        change = " + 1"
+                else:
+                    rows_affected = cur.execute('delete from UserTopicImageLikes where topicTitle=%(topicTitle)s and username=%(username)s', {'topicTitle': topic_title, 'username': username})
+
+                    if rows_affected != 0:
+                        change = " - 1"
+
+                query = "update TopicImages set likes = likes%s" %(change)
+                query += " where topicTitle=%(topicTitle)s and username=%(username)s"
+                cur.execute(query, {'topicTitle': topic_title, 'username': username})
                 conn.commit()
 
                 return generate_success_response("Updated %s vote for '%s'" %(username, topic_title))
