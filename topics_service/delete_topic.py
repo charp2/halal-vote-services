@@ -45,9 +45,22 @@ def delete_topic(data: dataType, conn, logger):
                     )
                 
                 cur.execute(
-                    '''delete from TopicImages where topicTitle=%(topicTitle)s''',
+                    '''select id from TopicImages where topicTitle=%(topicTitle)s''',
                     {'topicTitle': topic_title}
                 )
+                result = cur.fetchall()
+
+                if result:
+                    image_ids = flatten_result(result)
+
+                    cur.execute(
+                        '''delete from TopicImages where id in %(ids)s''',
+                        {'ids': image_ids}
+                    )
+                    cur.execute(
+                        '''delete from UserTopicImageLikes where imageId in %(ids)s''',
+                        {'ids': image_ids}
+                    )
                 
                 conn.commit()
                 return generate_success_response("Removed topic '%s'" %(topic_title))

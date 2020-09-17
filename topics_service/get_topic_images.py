@@ -15,14 +15,11 @@ def get_topic_images(data: dataType, conn, logger):
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             topic_title = data['topicTitle']
 
-            cur.execute('select username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
+            cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
             conn.commit()
 
             result = cur.fetchall()
-            if result:
-                return generate_success_response(result)
-            else:
-                return generate_error_response(500, "Getting Topic Images failed.")
+            return generate_success_response(result)
 
     except Exception as e:
         return generate_error_response(500, str(e))
