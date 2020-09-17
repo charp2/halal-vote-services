@@ -16,7 +16,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             topic_title = data['topicTitle']
-            username = data['username']
+            username = data.get('username')
             sessiontoken = request_headers.get('sessiontoken', '')
 
             if username != None:
