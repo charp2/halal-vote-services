@@ -80,7 +80,7 @@ def handler(event: eventType, context):
     elif (path == '/search-topics'):
         responseStatus, responseBody = search_topics(queryStringParams, conn, logger)
     elif (path == '/get-topic-images'):
-        responseStatus, responseBody = get_topic_images(queryStringParams, conn, logger)
+        responseStatus, responseBody = get_topic_images(queryStringParams, requestHeaders, conn, logger)
     elif (path == '/add-topic-image'):
         responseStatus, responseBody = add_topic_image(requestBody, conn, logger)
     elif (path == '/delete-topic-image'):

@@ -5,18 +5,36 @@ import pymysql
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import valid_user
 
 dataType = {
-    "topicTitle": str
+    "topicTitle": str,
+    "username": str
 }
-def get_topic_images(data: dataType, conn, logger):
+def get_topic_images(data: dataType, request_headers: any, conn, logger):
     # Access DB
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             topic_title = data['topicTitle']
+            username = data['username']
+            sessiontoken = request_headers.get('sessiontoken', '')
 
-            cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
-            conn.commit()
+            if username != None:
+                status_code, msg = valid_user(username, sessiontoken, conn, logger)
+
+                if status_code != 200:
+                    return generate_error_response(status_code, msg)
+
+                cur.execute('''
+                    select TopicImages.*, UserTopicImageLikes.imageId is not null as userLike
+                    from TopicImages left join UserTopicImageLikes on TopicImages.id = UserTopicImageLikes.imageId and UserTopicImageLikes.username = %(username)s
+                    where topicTitle=%(topicTitle)s
+                ''', {'username': username, 'topicTitle': topic_title})
+                conn.commit()
+            
+            else:
+                cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
+                conn.commit()
 
             result = cur.fetchall()
             return generate_success_response(result)
