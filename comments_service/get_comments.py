@@ -72,10 +72,16 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
             '''
             query_map['parentId'] = parent_id
         else:
-            query = '''
-                select * from Comments
-                where topicTitle=%(topicTitle)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
-            '''
+            if comment_type != None:
+                query = '''
+                    select * from Comments
+                    where topicTitle=%(topicTitle)s and commentType=%(commentType)s and %(startDepth)s < depth and depth <= %(endDepth)s
+                '''
+            else:
+                query = '''
+                    select * from Comments
+                    where topicTitle=%(topicTitle)s and %(startDepth)s < depth and depth <= %(endDepth)s
+                '''
             query_map['topicTitle'] = topic_title
             query_map['commentType'] = comment_type
 
@@ -92,7 +98,7 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
         if single_comment_id:
             query = '''
                 select * from Comments
-                where topicTitle=%(topicTitle)s and commentType=%(commentType)s and id=%(singleCommentId)s
+                where topicTitle=%(topicTitle)s and id=%(singleCommentId)s
             '''
             query_map['singleCommentId'] = single_comment_id
 
