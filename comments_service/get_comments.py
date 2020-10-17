@@ -139,7 +139,7 @@ def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
         if requestors_username == None:
             cur.execute(
                 '''
-                    select id, topicTitle, timeStamp, username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent
+                    select id, depth, topicTitle, timeStamp, username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent
                     from Comments left join CommentsClosure
                     on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
                     where id in %(commentIds)s
@@ -149,7 +149,7 @@ def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
         elif requestors_username != None:
             cur.execute(
                 '''
-                    select id, topicTitle, timeStamp, c.username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent, vote 
+                    select id, depth, topicTitle, timeStamp, c.username, comment, commentType, upVotes, downVotes, numReplies, ancestor, descendent, vote 
                     from 
                         (select * from Comments left join CommentsClosure
                         on (id = ancestor or id = descendent) and isDirect = 1 and ( (ancestor in %(commentIds)s or ancestor is NULL) and (descendent in %(commentIds)s or descendent is NULL) )
@@ -173,6 +173,7 @@ def make_comments_object(rows):
     for row in rows:
         # comment details
         comment_id = row["id"]
+        depth = row["depth"]
         topic_title = row["topicTitle"]
         timestamp = row["timeStamp"]
         username = row["username"]
@@ -218,6 +219,7 @@ def make_comments_object(rows):
         if not comment_id in filled_comments:
             comment = {
                 "id": comment_id,
+                "depth": depth,
                 "topicTitle": topic_title,
                 "timeStamp": timestamp,
                 "username": username,
@@ -338,6 +340,7 @@ def get_comment_object(comments_object, ancestor_map, comment_id):
 
 def set_comment_details(comments_object, ancestor_map, comment):
     comment_object = get_comment_object(comments_object, ancestor_map, comment["id"])
+    comment_object["depth"] = comment["depth"]
     comment_object["topicTitle"] = comment["topicTitle"]
     comment_object["timeStamp"] = comment["timeStamp"]
     comment_object["username"] = comment["username"]
@@ -354,6 +357,7 @@ def transform_comments_object(comments_object):
         replies = transform_comments_object_helper(comment["replies"])
         top_level_comment = {
             "id": comment["root"],
+            "depth": comment["depth"],
             "topicTitle": comment["topicTitle"],
             "timeStamp": comment["timeStamp"],
             "username": comment["username"],
@@ -375,6 +379,7 @@ def transform_comments_object_helper(comment_object_replies):
         nested_replies = transform_comments_object_helper(comment["replies"])
         replies.append({
             "id": comment_id,
+            "depth": comment["depth"],
             "topicTitle": comment["topicTitle"],
             "timeStamp": comment["timeStamp"],
             "username": comment["username"],
