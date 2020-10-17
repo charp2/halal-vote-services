@@ -5,7 +5,6 @@ import json
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
-from comments_service.utils import comment_type_to_num_comments_type_dict
 
 dataType = {
     "topicTitle": str,
@@ -53,9 +52,8 @@ def delete_comment(data: dataType, conn, logger):
                         {'id': id}
                     )
                 else:
-                    num_comments_type = comment_type_to_num_comments_type_dict[comment_type]
                     cur.execute(
-                        '''UPDATE Topics SET {} = {} - 1 WHERE topicTitle=%(topicTitle)s'''.format(num_comments_type, num_comments_type),
+                        '''UPDATE Topics SET numComments = numComments - 1 WHERE topicTitle=%(topicTitle)s''',
                         { 'id': id, 'topicTitle': topic_title }
                     )
                 if cur.rowcount > 0:

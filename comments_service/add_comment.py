@@ -7,7 +7,6 @@ from utils import generate_error_response
 from utils import generate_success_response
 from comments_service.utils import get_parent_depth
 from comments_service.utils import parent_depth_found
-from comments_service.utils import comment_type_to_num_comments_type_dict
 
 dataType = {
     "parentId": int,
@@ -67,13 +66,12 @@ def insert_comment(conn, parent_id, topic_title, username, comment, comment_type
             {'topicTitle': topic_title, 'username': username, 'comment': comment, 'commentType': comment_type, 'depth': depth}
         )
         if top_level:
-            num_comments_type = comment_type_to_num_comments_type_dict[comment_type]
             cur.execute(
                 '''
                 Update Topics
-                Set {} = {} + 1
+                Set numComments = numComments + 1
                 Where topicTitle = %(topicTitle)s
-                '''.format(num_comments_type, num_comments_type),
+                ''',
                 { "topicTitle": topic_title }
             )
         else:
