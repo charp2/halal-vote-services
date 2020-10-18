@@ -16,16 +16,11 @@ def vote_topic(data: dataType, conn, logger):
     username = data['username']
     topic_title = data['topicTitle']
     vote = data['vote']
-
-    if vote < -100 or vote > 100:
-        return generate_error_response(400, "Invalid vote passed in.")
     
     # Access DB
     try:
         with conn.cursor() as cur:
-            vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
-            vote_abs = abs(vote)
-            prev_vote_abs = None
+            rows_affected = 0
 
             cur.execute(
                 '''
@@ -36,33 +31,42 @@ def vote_topic(data: dataType, conn, logger):
             )
             prev_vote = cur.fetchone()
 
-            query_set_section = ""
-
             # Update Topics table
-            if prev_vote != None:
+            if prev_vote != None and prev_vote[0] != 0:
                 prev_vote = prev_vote[0]
-                prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
-                prev_vote_abs = abs(prev_vote)
-                num_votes_decrement = 1 if vote == 0 else 0
 
-                if prev_vote_field != vote_field:
-                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + prev_vote_field + " = " + prev_vote_field + " - %(prev_vote)s, " + "numVotes = numVotes - " + str(num_votes_decrement)
-                else:
-                    query_set_section = vote_field + " = " + vote_field + " + %(vote)s - %(prev_vote)s, " + "numVotes = numVotes - " + str(num_votes_decrement)
+                if prev_vote != vote:
+                    prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
 
-            else:
-                num_votes_increment = 0 if vote == 0 else 1
-                query_set_section = vote_field + " = " + vote_field + " + %(vote)s, " + "numVotes = numVotes + " + str(num_votes_increment)
+                    if vote == 0:
+                        query_set_section = prev_vote_field + " = " + prev_vote_field + " - 1, numVotes = numVotes - 1"
+                    else:
+                        vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
+                        query_set_section = vote_field + " = " + vote_field + " + 1, " + prev_vote_field + " = " + prev_vote_field + " - 1"
 
-            rows_affected = cur.execute(
-                '''
-                    update Topics
-                    set ''' + query_set_section + '''
-                    where topicTitle = %(topicTitle)s
-                ''',
-                {'topicTitle': topic_title, 'vote': vote_abs, 'prev_vote': prev_vote_abs}
-            )
-            conn.commit()
+                    rows_affected = cur.execute(
+                        '''
+                            update Topics
+                            set ''' + query_set_section + '''
+                            where topicTitle = %(topicTitle)s
+                        ''',
+                        {'topicTitle': topic_title}
+                    )
+                    conn.commit()
+
+            elif vote != 0:
+                vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
+                query_set_section = vote_field + " = " + vote_field + " + 1, numVotes = numVotes + 1"
+
+                rows_affected = cur.execute(
+                    '''
+                        update Topics
+                        set ''' + query_set_section + '''
+                        where topicTitle = %(topicTitle)s
+                    ''',
+                    {'topicTitle': topic_title}
+                )
+                conn.commit()
 
             if rows_affected != 0:
                 # Update UserTopicVotes table
@@ -77,6 +81,7 @@ def vote_topic(data: dataType, conn, logger):
                     conn.commit()
 
                 else:
+                    vote_bit = 1 if vote > 0 else -1
                     cur.execute(
                         '''
                             insert into UserTopicVotes (username, topicTitle, vote)
@@ -84,7 +89,7 @@ def vote_topic(data: dataType, conn, logger):
                             ON DUPLICATE KEY UPDATE
                             vote=%(vote)s
                         ''',
-                        {'username': username, 'topicTitle': topic_title, 'vote': vote}
+                        {'username': username, 'topicTitle': topic_title, 'vote': vote_bit}
                     )
                     conn.commit()
                 
