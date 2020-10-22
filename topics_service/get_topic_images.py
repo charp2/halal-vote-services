@@ -29,11 +29,12 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                     select TopicImages.*, UserTopicImageLikes.imageId is not null as userLike
                     from TopicImages left join UserTopicImageLikes on TopicImages.id = UserTopicImageLikes.imageId and UserTopicImageLikes.username = %(username)s
                     where topicTitle=%(topicTitle)s
+                    order by TopicImages.likes DESC
                 ''', {'username': username, 'topicTitle': topic_title})
                 conn.commit()
             
             else:
-                cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
+                cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s order by likes DESC', {'topicTitle': topic_title})
                 conn.commit()
 
             result = cur.fetchall()
