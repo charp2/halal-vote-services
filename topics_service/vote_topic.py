@@ -87,7 +87,7 @@ def vote_topic(data: dataType, conn, logger):
                             insert into UserTopicVotes (username, topicTitle, vote)
                             values (%(username)s, %(topicTitle)s, %(vote)s)
                             ON DUPLICATE KEY UPDATE
-                            vote=%(vote)s
+                            vote=%(vote)s, timeStamp=now()
                         ''',
                         {'username': username, 'topicTitle': topic_title, 'vote': vote_bit}
                     )
