@@ -38,7 +38,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
 
                 query = '''
                     select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote
-                    from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s
+                    from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                 '''
                 query_map['username'] = username
 

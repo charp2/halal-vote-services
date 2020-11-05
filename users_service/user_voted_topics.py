@@ -26,7 +26,7 @@ def user_voted_topics(data: dataType, request_headers: any, conn, logger):
                 query = '''
                             select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote
                             from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s
-                            where vote != 0
+                            where vote != 0 and UserTopicVotes.current = true
                             limit %(offset)s, %(n)s
                         '''
                 query_map = {'username': username, 'offset': offset, 'n': n}
