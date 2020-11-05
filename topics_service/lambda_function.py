@@ -15,6 +15,7 @@ from topics_service.get_topic_images import get_topic_images
 from topics_service.add_topic_image import add_topic_image
 from topics_service.delete_topic_image import delete_topic_image
 from topics_service.update_topic_image_like import update_topic_image_like
+from topics_service.get_topic_analytics import get_topic_analytics
 from utils import valid_user
 from utils import get_response_headers
 
@@ -29,7 +30,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-topics", "/search-topics", "/get-topic-images"]
+no_session_token = ["/get-topics", "/search-topics", "/get-topic-images", "/get-topic-analytics"]
 
 # verify db connection
 try:
@@ -87,6 +88,9 @@ def handler(event: eventType, context):
         responseStatus, responseBody = delete_topic_image(requestBody, conn, logger)
     elif (path == '/update-topic-image-like'):
         responseStatus, responseBody = update_topic_image_like(requestBody, conn, logger)
+    elif (path == '/get-topic-analytics'):
+        responseStatus, responseBody = get_topic_analytics(queryStringParams, conn, logger)
+
     else:
         responseStatus, responseBody = 404, "No path found..."
 
