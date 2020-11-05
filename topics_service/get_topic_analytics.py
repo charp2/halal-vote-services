@@ -27,14 +27,17 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             if num_prev == None:
                 start_time = None
-            elif prev_type == "d":
-                num_prev = int(num_prev)
-                start_time = end_time - timedelta(days=num_prev)
             else:
                 num_prev = int(num_prev)
-                start_time = end_time - timedelta(weeks=num_prev)
+                halal_counts = [0] * num_prev
+                haram_counts = [0] * num_prev
 
-            query_string = 'select timeStamp from UserTopicVotes where topicTitle=%(topicTitle)s'
+                if prev_type == "d":
+                    start_time = end_time - timedelta(days=num_prev)
+                else:
+                    start_time = end_time - timedelta(weeks=num_prev)
+
+            query_string = 'select timeStamp, vote from UserTopicVotes where topicTitle=%(topicTitle)s'
             query_params = {'topicTitle': topic_title}
 
             if start_time != None:
@@ -42,7 +45,6 @@ def get_topic_analytics(data: dataType, conn, logger):
                 query_params['startTime'] = start_time
                 query_params['endTime'] = end_time
             
-            query_string += ' order by timeStamp DESC'
             cur.execute(query_string, query_params)
             conn.commit()
 
@@ -57,17 +59,19 @@ def get_topic_analytics(data: dataType, conn, logger):
                         num_prev = num_prev // 7
                     
                     num_prev += 1
-                
-                counts = [0] * num_prev
+                    halal_counts = [0] * num_prev
+                    haram_counts = [0] * num_prev
 
                 for value in results:
                     current_time = value["timeStamp"]
+                    current_vote = value["vote"]
                     diff = (end_time - current_time).days if prev_type == "d" else (end_time - current_time).days // 7
-                    counts[num_prev - 1 - diff] += 1
+                    if current_vote > 0:
+                        halal_counts[num_prev - 1 - diff] += 1
+                    elif current_vote < 0:
+                        haram_counts[num_prev - 1 - diff] += 1
 
-                return generate_success_response(counts)
-            else:
-                return generate_error_response(500, "Failed to fetch analytics.")
+            return generate_success_response({"halalCounts": halal_counts, "haramCounts": haram_counts})
 
     except Exception as e:
         return generate_error_response(500, str(e))
