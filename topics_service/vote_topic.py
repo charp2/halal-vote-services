@@ -24,17 +24,22 @@ def vote_topic(data: dataType, conn, logger):
 
             cur.execute(
                 '''
-                    select vote from UserTopicVotes
-                    where username = %(username)s and topicTitle = %(topicTitle)s
+                    select UserTopicVotes.vote, Users.lastLatitude, Users.lastLongitude from UserTopicVotes
+                    left join Users
+                    on UserTopicVotes.username = Users.username
+                    where UserTopicVotes.username = %(username)s and UserTopicVotes.topicTitle = %(topicTitle)s
                 ''',
                 {'username': username, 'topicTitle': topic_title}
             )
-            prev_vote = cur.fetchone()
+            results = cur.fetchone()
+            
+            prev_vote, latitude, longitude = (None, None, None)
+
+            if results:
+                prev_vote, latitude, longitude = results
 
             # Update Topics table
-            if prev_vote != None and prev_vote[0] != 0:
-                prev_vote = prev_vote[0]
-
+            if prev_vote != None and prev_vote != 0:
                 if prev_vote != vote:
                     prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
 
@@ -84,12 +89,12 @@ def vote_topic(data: dataType, conn, logger):
                     vote_bit = 1 if vote > 0 else -1
                     cur.execute(
                         '''
-                            insert into UserTopicVotes (username, topicTitle, vote)
-                            values (%(username)s, %(topicTitle)s, %(vote)s)
+                            insert into UserTopicVotes (username, topicTitle, vote, latitude, longitude)
+                            values (%(username)s, %(topicTitle)s, %(vote)s, %(latitude)s, %(longitude)s)
                             ON DUPLICATE KEY UPDATE
-                            vote=%(vote)s, timeStamp=now()
+                            vote=%(vote)s, timeStamp=now(), latitude=%(latitude)s, longitude=%(longitude)s
                         ''',
-                        {'username': username, 'topicTitle': topic_title, 'vote': vote_bit}
+                        {'username': username, 'topicTitle': topic_title, 'vote': vote_bit, 'latitude':latitude, 'longitude': longitude}
                     )
                     conn.commit()
                 
