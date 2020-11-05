@@ -76,7 +76,8 @@ def handler(event: eventType, context):
         value = requestParams['value']
         responseStatus, responseBody = activate_user(username, value, conn, logger)
     elif path == '/login':
-        responseStatus, responseBody = login(requestBody, conn, logger)
+        ip_address = requestHeaders['X-Forwarded-For']
+        responseStatus, responseBody = login(requestBody, ip_address, conn, logger)
     elif path == '/logout':
         responseStatus, responseBody = logout(requestBody, requestHeaders['sessionToken'], conn, logger)
     elif path == '/user-created-topics':

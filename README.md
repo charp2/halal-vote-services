@@ -7,13 +7,25 @@ This is a python service for interacting with the haram-halal-db MySql database
 
 This library contains code for a lambda function which gets invoked by an AWS API-Gateway. lambda_function.py contains the handler for the https event that invokes the lambda.
 
-The updateFunction script contains a series of bash commands which will update the lambda on aws. In order for this script to work, you must have installed PyMySql by following the instructions below:
+The updateFunction script contains a series of bash commands which will update the lambda on aws. In order for this script to work, you must have installed the dependencies using Pipenv as follows:
 
-`~/halal-vote-services$ python3 -m venv v-env` 
+First install Pipenv:
 
-`~/halal-vote-services$ source v-env/bin/activate` 
+`brew install pipenv`
 
-`~/halal-vote-services$ pip3 install PyMySql`
+Set Pipenv to install dependencies to this directory:
+
+`export PIPENV_VENV_IN_PROJECT="enabled"`
+
+Install dependencies using Pipenv:
+
+`pipenv install --python 3.7`
+
+NOTE: You must have Python 3.7 installed for this to work. If you don't, first do so as follows:
+
+`brew install python@3.7`
+
+Then follow the cli output to set your PATH.
 
 Now you can run `~/halal-vote-services$ ./updateFunction {service} {aws_password}` anytime code is updated.
 

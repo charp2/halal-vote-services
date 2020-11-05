@@ -7,7 +7,7 @@ awk '{sub(/_password_/,'\"$2\"')}1' rds_config.py > temp.py && mv temp.py rds_co
 
 # zipping
 rm function.zip || true
-cd v-env/lib/python3.7/site-packages/
+cd .venv/lib/python3.7/site-packages/
 zip -r9 ../../../../function.zip .
 cd ../../../../
 zip -g function.zip rds_config.py
