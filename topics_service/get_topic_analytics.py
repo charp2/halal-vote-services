@@ -29,8 +29,8 @@ def get_topic_analytics(data: dataType, conn, logger):
                 start_time = datetime.min
             else:
                 num_intervals = int(num_intervals)
-                halal_counts = [0] * num_intervals
-                haram_counts = [0] * num_intervals
+                halal_counts = [None] * num_intervals
+                haram_counts = [None] * num_intervals
 
                 if interval == "d":
                     start_time = end_time - timedelta(days=num_intervals)
@@ -76,6 +76,31 @@ def get_topic_analytics(data: dataType, conn, logger):
 
                     halal_counts[num_intervals - 1 - diff] = halal_points
                     haram_counts[num_intervals - 1 - diff] = haram_points
+            
+            last_halal_points = 0
+            last_haram_points = 0
+
+            cur.execute('''
+                select halalPoints, haramPoints from UserTopicVotes
+                where topicTitle = %(topicTitle)s and voteTime < %(startTime)s
+                ORDER BY voteTime DESC LIMIT 1
+            ''', {'topicTitle': topic_title, 'startTime': start_time})
+            conn.commit()
+            initial_count_results = cur.fetchone()
+
+            if initial_count_results:
+                last_halal_points, last_haram_points = initial_count_results
+
+            for i in range(num_intervals):
+                if halal_counts[i] == None:
+                    halal_counts[i] = last_halal_points
+                else:
+                    last_halal_points = halal_counts[i]
+                
+                if haram_counts[i] == None:
+                    haram_counts[i] = last_haram_points
+                else:
+                    last_haram_points = haram_counts[i]
 
             return generate_success_response({"halalCounts": halal_counts, "haramCounts": haram_counts})
 
