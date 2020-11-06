@@ -22,11 +22,11 @@ def vote_topic(data: dataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
-            prev_vote, prev_vote_time, latitude, longitude = (None, None, None, None)
+            prev_vote, prev_vote_time, latitude, longitude, halal_points, haram_points = (None, None, None, None, 0, 0)
 
             cur.execute(
                 '''
-                    select vote, timeStamp from UserTopicVotes
+                    select vote, voteTime from UserTopicVotes
                     where UserTopicVotes.username = %(username)s and UserTopicVotes.topicTitle = %(topicTitle)s and UserTopicVotes.current = true
                 ''',
                 {'username': username, 'topicTitle': topic_title}
@@ -53,36 +53,41 @@ def vote_topic(data: dataType, conn, logger):
             if prev_vote != None and prev_vote != 0:
                 if prev_vote != vote:
                     prev_vote_field = 'halalPoints' if prev_vote > 0 else 'haramPoints'
+                    vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
 
                     if vote == 0:
                         query_set_section = prev_vote_field + " = " + prev_vote_field + " - 1, numVotes = numVotes - 1"
+                        query_string, query_params = createSetTopicsQuery(query_set_section, topic_title)
                     else:
-                        vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
                         query_set_section = vote_field + " = " + vote_field + " + 1, " + prev_vote_field + " = " + prev_vote_field + " - 1"
-
-                    rows_affected = cur.execute(
-                        '''
-                            update Topics
-                            set ''' + query_set_section + '''
-                            where topicTitle = %(topicTitle)s
-                        ''',
-                        {'topicTitle': topic_title}
-                    )
+                        query_string, query_params = createSetTopicsQuery(query_set_section, topic_title)
+                    
+                    rows_affected = cur.execute(query_string, query_params)
                     conn.commit()
+
+                    if rows_affected != 0 and vote != 0:
+                        query_string, query_params = creatGetVoteCountQuery(topic_title)
+                        cur.execute(query_string, query_params)
+                        update_results = cur.fetchone()
+
+                        if update_results:
+                            halal_points, haram_points = update_results
 
             elif vote != 0:
                 vote_field = 'halalPoints' if vote > 0 else 'haramPoints'
                 query_set_section = vote_field + " = " + vote_field + " + 1, numVotes = numVotes + 1"
+                query_string, query_params = createSetTopicsQuery(query_set_section, topic_title)
 
-                rows_affected = cur.execute(
-                    '''
-                        update Topics
-                        set ''' + query_set_section + '''
-                        where topicTitle = %(topicTitle)s
-                    ''',
-                    {'topicTitle': topic_title}
-                )
+                rows_affected = cur.execute(query_string, query_params)
                 conn.commit()
+
+                if rows_affected != 0 and vote != 0:
+                    query_string, query_params = creatGetVoteCountQuery(topic_title)
+                    cur.execute(query_string, query_params)
+                    update_results = cur.fetchone()
+
+                    if update_results:
+                        halal_points, haram_points = update_results
 
             if rows_affected != 0:
                 # Update UserTopicVotes table
@@ -103,31 +108,31 @@ def vote_topic(data: dataType, conn, logger):
                         cur.execute(
                             '''
                                 update UserTopicVotes
-                                set vote = %(vote)s, timeStamp = %(timeStamp)s, latitude = %(latitude)s, longitude = %(longitude)s
+                                set vote = %(vote)s, voteTime = %(voteTime)s, latitude = %(latitude)s, longitude = %(longitude)s, halalPoints = %(halalPoints)s, haramPoints = %(haramPoints)s
                                 where username = %(username)s and topicTitle = %(topicTitle)s and current = true
                             ''',
-                            {'vote': vote_bit, 'timeStamp': current_time, 'latitude': latitude, 'longitude': longitude, 'username': username, 'topicTitle': topic_title}
+                            {'vote': vote_bit, 'voteTime': current_time, 'latitude': latitude, 'longitude': longitude, 'halalPoints': halal_points, 'haramPoints': haram_points, 'username': username, 'topicTitle': topic_title}
                         )
                         conn.commit()
                 else:
-                    if prev_vote != None or prev_vote != vote_bit:
+                    if prev_vote == None or (prev_vote != None and prev_vote != vote_bit):
                         cur.execute(
                             '''
                                 update UserTopicVotes
-                                set current = false
+                                set current = false, removalTime = %(removalTime)s
                                 where username = %(username)s and topicTitle = %(topicTitle)s and current = true
                             ''',
-                            {'username': username, 'topicTitle': topic_title}
+                            {'removalTime': current_time,'username': username, 'topicTitle': topic_title}
                         )
                         conn.commit()
 
                     if vote_bit != 0:
                         cur.execute(
                             '''
-                                insert into UserTopicVotes (username, topicTitle, vote, latitude, longitude)
-                                values (%(username)s, %(topicTitle)s, %(vote)s, %(latitude)s, %(longitude)s)
+                                insert into UserTopicVotes (username, topicTitle, vote, latitude, longitude, halalPoints, haramPoints)
+                                values (%(username)s, %(topicTitle)s, %(vote)s, %(latitude)s, %(longitude)s, %(halalPoints)s, %(haramPoints)s)
                             ''',
-                            {'username': username, 'topicTitle': topic_title, 'vote': vote_bit, 'latitude':latitude, 'longitude': longitude}
+                            {'username': username, 'topicTitle': topic_title, 'vote': vote_bit, 'latitude':latitude, 'longitude': longitude, 'halalPoints': halal_points, 'haramPoints': haram_points}
                         )
                         conn.commit()
                 
@@ -147,3 +152,20 @@ def vote_topic(data: dataType, conn, logger):
 
     except Exception as e:
         return generate_error_response(500, str(e))
+
+def createSetTopicsQuery(query_set_section, topic_title):
+    query_string ='''
+            update Topics
+            set ''' + query_set_section + '''
+            where topicTitle = %(topicTitle)s
+        '''
+    query_params = {'topicTitle': topic_title}
+    return (query_string, query_params)
+
+def creatGetVoteCountQuery(topic_title):
+    query_string ='''
+            select halalPoints, haramPoints from Topics
+            where topicTitle = %(topicTitle)s
+        '''
+    query_params = {'topicTitle': topic_title}
+    return (query_string, query_params)
