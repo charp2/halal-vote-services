@@ -1,4 +1,5 @@
 # standard python imports
+import sys
 import json
 import pymysql
 
@@ -9,7 +10,9 @@ from utils import valid_user
 
 dataType = {
     "topicTitle": str,
-    "username": str
+    "username": str,
+    "n": int,
+    "excludedIds": [int]
 }
 def get_topic_images(data: dataType, request_headers: any, conn, logger):
     # Access DB
@@ -17,25 +20,59 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             topic_title = data['topicTitle']
             username = data.get('username')
+            n = int(data.get('n', sys.maxsize))
+            excluded_ids = list(map(str, data.get('excludedIds', [])))
             sessiontoken = request_headers.get('sessiontoken', '')
 
+            query = ''
+            query_map = {}
             if username != None:
                 status_code, msg = valid_user(username, sessiontoken, conn, logger)
 
                 if status_code != 200:
                     return generate_error_response(status_code, msg)
 
-                cur.execute('''
+                query = '''
                     select TopicImages.*, UserTopicImageLikes.imageId is not null as userLike
                     from TopicImages left join UserTopicImageLikes on TopicImages.id = UserTopicImageLikes.imageId and UserTopicImageLikes.username = %(username)s
                     where topicTitle=%(topicTitle)s
-                    order by TopicImages.likes DESC
-                ''', {'username': username, 'topicTitle': topic_title})
-                conn.commit()
+                '''
+                query_map['username'] = username
+                query_map['topicTitle'] = topic_title
+
+                if excluded_ids:
+                    query = query + '''
+                        and TopicImages.id not in %(excludedIds)s
+                    '''
+                    query_map['excludedIds'] = excluded_ids
             
+                query = query + '''
+                    order by TopicImages.likes DESC
+                    limit %(n)s
+                '''
+                query_map['n'] = n
             else:
-                cur.execute('select id, username, image, likes from TopicImages where topicTitle=%(topicTitle)s order by likes DESC', {'topicTitle': topic_title})
-                conn.commit()
+                query = '''
+                    select id, username, image, likes from TopicImages 
+                    where topicTitle=%(topicTitle)s
+                '''
+                query_map['topicTitle'] = topic_title
+                query_map['excludedIds'] = excluded_ids
+
+                if excluded_ids:
+                    query = query + '''
+                        and id not in %(excludedIds)s
+                    '''
+                    query_map['excludedIds'] = excluded_ids
+
+                query = query + '''
+                    order by likes DESC 
+                    limit %(n)s
+                '''
+                query_map['n'] = n
+
+            cur.execute(query, query_map)
+            conn.commit()
 
             result = cur.fetchall()
             return generate_success_response(result)
