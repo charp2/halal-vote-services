@@ -65,3 +65,6 @@ def flatten_result(result):
 
 def convert_bit_to_int(bit):
     return 0 if bit == b'\x00' else 1
+
+def get_time_floor(time):
+    return datetime.combine(time, datetime.min.time())

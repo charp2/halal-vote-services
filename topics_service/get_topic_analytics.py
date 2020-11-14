@@ -6,7 +6,9 @@ import pymysql
 from utils import generate_error_response
 from utils import generate_success_response
 from utils import generate_timestamp
+from utils import get_time_floor
 from datetime import datetime, timedelta
+import math
 
 dataType = {
     "topicTitle": str,
@@ -20,24 +22,51 @@ def get_topic_analytics(data: dataType, conn, logger):
             topic_title = data['topicTitle']
             interval = data['interval'].lower()
             num_intervals = data.get('numIntervals', None)
-            end_time = generate_timestamp()
+            end_time = get_time_floor(generate_timestamp())
 
-            if interval != "d" and interval != "w":
-                return generate_error_response(400, "Previous type is invalid.")
+            if interval != "d" and interval != "w" and interval != "a":
+                return generate_error_response(400, "interval type is invalid")
 
-            if num_intervals == None:
-                start_time = datetime.min
-            else:
+            elif interval == "a":
+                cur.execute('''
+                    select voteTime from UserTopicVotes
+                    where topicTitle = %(topicTitle)s
+                    ORDER BY voteTime ASC LIMIT 1
+                ''', {'topicTitle': topic_title})
+                conn.commit()
+                start_time = cur.fetchone()
+
+                if start_time:
+                    start_time = get_time_floor(start_time["voteTime"])
+                    num_intervals = (end_time - start_time).days + 1
+
+                    if num_intervals <= 365:
+                        interval = "d"
+                        num_intervals = max(7, num_intervals)
+
+                    else:
+                        interval = "w"
+                        num_intervals = math.ceil(num_intervals / 7)
+                    
+                    halal_counts = [None] * num_intervals
+                    haram_counts = [None] * num_intervals
+
+                else:
+                    response = {"interval": "d", "halalCounts": [0] * 7, "haramCounts": [0] * 7}
+                    return generate_success_response(response)
+
+            elif num_intervals != None:
                 num_intervals = int(num_intervals)
                 halal_counts = [None] * num_intervals
                 haram_counts = [None] * num_intervals
 
                 if interval == "d":
-                    start_time = end_time - timedelta(days=num_intervals)
-                else:
-                    start_time = end_time - timedelta(weeks=num_intervals)
-                
-                start_time = datetime.combine(start_time, datetime.min.time())
+                    start_time = end_time - timedelta(days=num_intervals - 1)
+                elif interval == "w":
+                    start_time = end_time - timedelta(weeks=num_intervals - 1)
+                    
+            else:
+                return generate_error_response(400, "numIntervals must be passed in for interval type d or w")
 
             cur.execute('''
                 select utv.vote, utv.voteTime, utv.halalPoints, utv.haramPoints, utv.removalTime from UserTopicVotes utv
@@ -46,7 +75,7 @@ def get_topic_analytics(data: dataType, conn, logger):
                         select 
                         max(voteTime) max_vote_time
                         from UserTopicVotes
-                        where voteTime > %(startTime)s and topicTitle=%(topicTitle)s
+                        where voteTime >= %(startTime)s and topicTitle=%(topicTitle)s
                         group by date(`voteTime`)
                     ) as utv_maxes
                 on utv.voteTime = utv_maxes.max_vote_time
@@ -57,7 +86,7 @@ def get_topic_analytics(data: dataType, conn, logger):
             if vote_results:
                 for vote_result in vote_results:
                     vote = vote_result["vote"]
-                    vote_time = vote_result["voteTime"]
+                    vote_time = get_time_floor(vote_result["voteTime"])
                     halal_points = vote_result["halalPoints"]
                     haram_points = vote_result["haramPoints"]
                     removal_time = vote_result["removalTime"]
@@ -65,10 +94,9 @@ def get_topic_analytics(data: dataType, conn, logger):
                     diff = (end_time - vote_time).days if interval == "d" else (end_time - vote_time).days // 7
 
                     if removal_time:
-                        vote_time_floor = datetime.combine(vote_time, datetime.min.time())
-                        removal_time_floor = datetime.combine(removal_time, datetime.min.time())
+                        removal_time = get_time_floor(removal_time)
 
-                        if vote_time_floor == removal_time_floor:
+                        if vote_time == removal_time:
                             if vote > 0:
                                 halal_points -= 1
                             elif vote < 0:
@@ -103,7 +131,7 @@ def get_topic_analytics(data: dataType, conn, logger):
                 else:
                     last_haram_points = haram_counts[i]
 
-            return generate_success_response({"halalCounts": halal_counts, "haramCounts": haram_counts})
+            return generate_success_response({"interval": interval, "halalCounts": halal_counts, "haramCounts": haram_counts})
 
     except Exception as e:
         return generate_error_response(500, str(e))
