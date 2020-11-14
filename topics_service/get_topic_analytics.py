@@ -89,7 +89,8 @@ def get_topic_analytics(data: dataType, conn, logger):
             initial_count_results = cur.fetchone()
 
             if initial_count_results:
-                last_halal_points, last_haram_points = initial_count_results
+                last_halal_points = initial_count_results["halalPoints"]
+                last_haram_points = initial_count_results["haramPoints"]
 
             for i in range(num_intervals):
                 if halal_counts[i] == None:
