@@ -22,7 +22,7 @@ def activate_user(username: str, activation_value: str, conn, logger):
                     cur.execute("update Users set sessionToken=%(sessionToken)s, sessionTimestamp=%(sessionTimestamp)s, activeStatus='ACTIVE' where username=%(username)s", {'sessionToken': session_token, 'sessionTimestamp': session_timestamp, 'username': username})
                     conn.commit()
 
-                    return generate_success_response("Successfully activated User '%s' with sessionToken '%s'" %(username, session_token))
+                    return generate_success_response("Successfully activated %s!" %(username))
                 else:
                     return generate_error_response(401, "Unauthorized Activation")
 

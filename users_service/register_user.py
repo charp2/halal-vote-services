@@ -1,6 +1,7 @@
 # standard python imports
 from secrets import token_hex
 import json
+import boto3
 
 # our imports
 from users_service.utils import create_hashed_password
@@ -34,8 +35,32 @@ def register_user(data: dataType, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')", {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
+            cur.execute('''
+                insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')
+            ''', {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
         conn.commit()
+
+        ses = boto3.client('ses')
+        email_body = "<div><span>Thanks for signing up for halalvote.com! Click </span><span><a href='https://3nu4kqzyt4.execute-api.us-east-1.amazonaws.com/qa/activate-user?username=%s&value=%s'>here</a></span><span> to activate your account.</span></div>" %(username, activation_value)
+
+        ses.send_email(
+            Source='votehalalharam@gmail.com',
+            Destination={
+                'ToAddresses': [
+                    email,
+                ]
+            },
+            Message={
+                'Subject': {
+                    'Data': 'Complete Registration for halalvote.com'
+                },
+                'Body': {
+                    'Html': {
+                        'Data': email_body
+                    }
+                }
+            }
+        )
     except Exception as e:
         return generate_error_response(500, str(e))
 
