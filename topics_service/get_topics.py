@@ -32,9 +32,8 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             query = '''
-                select Topics.*, null as vote, COUNT(*) as numImages
+                select Topics.*, null as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
                 from Topics left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
-                group by Topics.topicTitle
             '''
             query_map = {}
 
@@ -45,10 +44,9 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, COUNT(*) as numImages
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                     left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
-                    group by Topics.topicTitle
                 '''
                 query_map['username'] = username
 
@@ -64,7 +62,8 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['topicTitles']  = topic_titles
             else:
-                query = '''select * from (''' + query + ''') as T
+                query = '''select * from (''' + query + '''
+                group by Topics.topicTitle) as T
                 ''' + sort_query + '''
                 limit %(offset)s, %(n)s'''
                 query_map['offset'] = offset
