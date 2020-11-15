@@ -8,6 +8,10 @@ from utils import generate_error_response
 from utils import generate_success_response
 from utils import valid_user
 
+sort_query = '''
+    order by ((T.numVotes*4) + T.numComments + T.numImages*2) desc, T.timeStamp desc
+'''
+
 dataType = {
     'topicTitles': [str],
     'n': int,
@@ -27,7 +31,11 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
     # Access DB
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
-            query = 'select *, null as vote from Topics'
+            query = '''
+                select Topics.*, null as vote, COUNT(*) as numImages
+                from Topics left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
+                group by Topics.topicTitle
+            '''
             query_map = {}
 
             if username != None:
@@ -37,8 +45,10 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, COUNT(*) as numImages
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
+                    left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
+                    group by Topics.topicTitle
                 '''
                 query_map['username'] = username
 
@@ -54,9 +64,9 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['topicTitles']  = topic_titles
             else:
-                query = query + '''
-                    limit %(offset)s, %(n)s
-                '''
+                query = '''select * from (''' + query + ''') as T
+                ''' + sort_query + '''
+                limit %(offset)s, %(n)s'''
                 query_map['offset'] = offset
                 query_map['n'] = n
 
