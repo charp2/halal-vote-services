@@ -29,7 +29,7 @@ def activate_user(username: str, activation_value: str, conn, logger):
             elif fetched_active_status == "DELETED":
                 return generate_error_response(403, "User is DELETED")
             else:
-                return generate_error_response(403, "User is already ACTIVE")
+                return generate_success_response("%s is already ACTIVE!" %(username))
 
     except Exception as e:
         return generate_error_response(500, str(e))
