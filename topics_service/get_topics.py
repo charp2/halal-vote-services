@@ -9,7 +9,7 @@ from utils import generate_success_response
 from utils import valid_user
 
 sort_query = '''
-    order by ((T.numVotes*2) + POWER(T.numComments, 1/2)*4 + POWER(T.numImages, 1/3)*5) desc, T.timeStamp desc
+    order by ((T.numVotes*2) + POWER(T.numComments, 1/2)*4 + POWER(T.numImages, 1/3)*5 - Abs(T.vote*100)) desc, T.timeStamp desc
 '''
 
 dataType = {
