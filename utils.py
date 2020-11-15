@@ -68,3 +68,16 @@ def convert_bit_to_int(bit):
 
 def get_time_floor(time):
     return datetime.combine(time, datetime.min.time())
+
+def pad_number(value):
+    return '0' + str(value) if value < 10 else str(value)
+
+def get_utc_offset(time):
+    utc = generate_timestamp()
+
+    diff_seconds = (utc - time).seconds
+    diff_hours = pad_number(abs(diff_seconds // 3600))
+    diff_minutes = pad_number(abs((diff_seconds // 60) % 60))
+
+    sign = '-' if diff_seconds > 0 else '+'
+    return '%s%s:%s' %(sign, diff_hours, diff_minutes)
