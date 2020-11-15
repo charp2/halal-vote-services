@@ -32,7 +32,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             query = '''
-                select Topics.*, null as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
+                select Topics.*, 0 as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
                 from Topics left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
             '''
             query_map = {}
