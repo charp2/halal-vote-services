@@ -41,7 +41,7 @@ def register_user(data: dataType, conn, logger):
         conn.commit()
 
         ses = boto3.client('ses')
-        email_body = "<div><span>Thanks for signing up for halalvote.com! Click </span><span><a href='https://3nu4kqzyt4.execute-api.us-east-1.amazonaws.com/qa/activate-user?username=%s&value=%s'>here</a></span><span> to activate your account.</span></div>" %(username, activation_value)
+        email_body = "<div><span>Thanks for signing up for Halal Vote! Click </span><span><a href='https://3nu4kqzyt4.execute-api.us-east-1.amazonaws.com/qa/activate-user?username=%s&value=%s'>here</a></span><span> to activate your account.</span></div>" %(username, activation_value)
 
         ses.send_email(
             Source='votehalalharam@gmail.com',

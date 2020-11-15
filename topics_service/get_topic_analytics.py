@@ -47,9 +47,6 @@ def get_topic_analytics(data: dataType, conn, logger):
                     else:
                         interval = "w"
                         num_intervals = math.ceil(num_intervals / 7)
-                    
-                    halal_counts = [None] * num_intervals
-                    haram_counts = [None] * num_intervals
 
                 else:
                     response = {"interval": "d", "halalCounts": [0] * 7, "haramCounts": [0] * 7}
@@ -57,8 +54,6 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             elif num_intervals != None:
                 num_intervals = int(num_intervals)
-                halal_counts = [None] * num_intervals
-                haram_counts = [None] * num_intervals
 
                 if interval == "d":
                     start_time = end_time - timedelta(days=num_intervals - 1)
@@ -67,6 +62,11 @@ def get_topic_analytics(data: dataType, conn, logger):
                     
             else:
                 return generate_error_response(400, "numIntervals must be passed in for interval type d or w")
+
+            halal_counts = [None] * num_intervals
+            haram_counts = [None] * num_intervals
+            halal_count_removals = [None] * num_intervals
+            haram_count_removals = [None] * num_intervals
 
             cur.execute('''
                 select utv.vote, utv.voteTime, utv.halalPoints, utv.haramPoints, utv.removalTime from UserTopicVotes utv
@@ -94,13 +94,24 @@ def get_topic_analytics(data: dataType, conn, logger):
                     diff = (end_time - vote_time).days if interval == "d" else (end_time - vote_time).days // 7
 
                     if removal_time:
-                        removal_time = get_time_floor(removal_time)
+                        removal_time_floor = get_time_floor(removal_time)
 
-                        if vote_time == removal_time:
-                            if vote > 0:
+                        if vote > 0:
+                            if vote_time == removal_time_floor:
                                 halal_points -= 1
-                            elif vote < 0:
+                            else:
+                                if halal_count_removals[num_intervals - 1 - diff] == None:
+                                    halal_count_removals[num_intervals - 1 - diff] = 1
+                                else:
+                                    halal_count_removals[num_intervals - 1 - diff] += 1
+                        elif vote < 0:
+                            if vote_time == removal_time_floor:
                                 haram_points -= 1
+                            else:
+                                if haram_count_removals[num_intervals - 1 - diff] == None:
+                                    haram_count_removals[num_intervals - 1 - diff] = 1
+                                else:
+                                    haram_count_removals[num_intervals - 1 - diff] += 1
 
                     halal_counts[num_intervals - 1 - diff] = halal_points
                     haram_counts[num_intervals - 1 - diff] = haram_points
@@ -122,11 +133,17 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             for i in range(num_intervals):
                 if halal_counts[i] == None:
+                    if halal_count_removals[i] != None:
+                        last_halal_points -= halal_count_removals[i]
+                    
                     halal_counts[i] = last_halal_points
                 else:
                     last_halal_points = halal_counts[i]
                 
                 if haram_counts[i] == None:
+                    if haram_count_removals[i] != None:
+                        last_haram_points -= haram_count_removals[i]
+                    
                     haram_counts[i] = last_haram_points
                 else:
                     last_haram_points = haram_counts[i]
