@@ -4,13 +4,14 @@ import json
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import create_presigned_post
 
-dataType = {
+addTopicDataType = {
     "topicTitle": str,
     "username": str,
     "image": str
 }
-def add_topic_image(data: dataType, conn, logger):
+def add_topic_image(data: addTopicDataType, conn, logger):
     # Access DB
     try:
         with conn.cursor() as cur:
@@ -30,3 +31,17 @@ def add_topic_image(data: dataType, conn, logger):
 
     except Exception as e:
         return generate_error_response(500, str(e))
+
+
+presignedPostDataType = {
+    "objectKey": str,
+}
+def presigned_media_upload(data: presignedPostDataType):
+    object_key = data.get('objectKey')
+
+    presigned_post = create_presigned_post('hv-media', object_key)
+
+    if presigned_post != None:
+        return generate_success_response(presigned_post)
+    else:
+        return generate_error_response(500, 'failed to generate presigned post')

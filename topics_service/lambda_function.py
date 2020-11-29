@@ -13,6 +13,7 @@ from topics_service.search_topics import search_topics
 from topics_service.vote_topic import vote_topic
 from topics_service.get_topic_images import get_topic_images
 from topics_service.add_topic_image import add_topic_image
+from topics_service.add_topic_image import presigned_media_upload
 from topics_service.delete_topic_image import delete_topic_image
 from topics_service.update_topic_image_like import update_topic_image_like
 from topics_service.get_topic_analytics import get_topic_analytics
@@ -30,7 +31,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # apis not requiring sessionToken
-no_session_token = ["/get-topics", "/search-topics", "/get-topic-images", "/get-topic-analytics"]
+no_session_token = ["/get-topics", "/search-topics", "/get-topic-images", "/get-topic-analytics", "/get-presigned-media-upload-url"]
 
 # verify db connection
 try:
@@ -84,6 +85,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = get_topic_images(queryStringParams, requestHeaders, conn, logger)
     elif (path == '/add-topic-image'):
         responseStatus, responseBody = add_topic_image(requestBody, conn, logger)
+    elif (path == '/get-presigned-media-upload-url'):
+        responseStatus, responseBody = presigned_media_upload(queryStringParams)
     elif (path == '/delete-topic-image'):
         responseStatus, responseBody = delete_topic_image(requestBody, conn, logger)
     elif (path == '/update-topic-image-like'):
