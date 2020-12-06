@@ -21,7 +21,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
             topic_title = data['topicTitle']
             username = data.get('username')
             n = int(data.get('n', sys.maxsize))
-            excluded_ids = list(map(str, data.get('excludedIds', [])))
+            excluded_ids = data.get('excludedIds', '').split()
             sessiontoken = request_headers.get('sessiontoken', '')
 
             query = ''

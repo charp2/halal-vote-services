@@ -35,7 +35,6 @@ def add_comment(data: dataType, conn, logger):
     try:
         if is_top_level_comment(parent_id):
             new_comment = insert_comment(conn, parent_id, topic_title, username, comment, comment_type, 1)
-            print(new_comment)
             return generate_success_response(new_comment)
 
         else:
