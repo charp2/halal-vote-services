@@ -9,9 +9,14 @@ from utils import flatten_result
 from comments_service.utils import get_parent_depth
 from comments_service.utils import parent_depth_found
 
-sort_query = '''
+sort_query_top_level = '''
     order by (25 * (upVotes + downVotes + 1)) / GREATEST(1, POWER(TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP()), 1/2)) desc,
     timeStamp desc
+'''
+
+sort_query_replies = '''
+    order by (25 * (upVotes + downVotes + 1)) / POWER(GREATEST(1, TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP())), -1/2)*100 desc,
+    timeStamp asc
 '''
 
 dataType = {
@@ -60,6 +65,7 @@ def is_show_more_request(parent_id: int):
     return parent_id != None
 
 def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, single_comment_id=None, parent_id=None, requestors_username:str = None):
+    sort_query = sort_query_replies if is_show_more_request(parent_id) else sort_query_top_level
     with conn.cursor() as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
@@ -130,11 +136,12 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
                 backtracked_comment_ids = flatten_result(ancestors_result)
                 comment_ids = comment_ids + backtracked_comment_ids
 
-            relevant_comments = fetch_relevant_comments(conn, comment_ids, requestors_username=requestors_username)
+            relevant_comments = fetch_relevant_comments(conn, comment_ids, requestors_username=requestors_username, parent_id=parent_id)
 
         return relevant_comments
 
-def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None):
+def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None, parent_id = None):
+    sort_query = sort_query_replies if is_show_more_request(parent_id) else sort_query_top_level
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         if requestors_username == None:
             cur.execute(
