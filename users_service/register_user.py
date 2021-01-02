@@ -37,11 +37,6 @@ def register_user(data: dataType, conn, logger):
     try:
         with conn.cursor() as cur:
             cur.execute('''
-                insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')
-            ''', {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
-            conn.commit()
-
-            cur.execute('''
                 select topicTitle from Topics
                 ORDER BY numVotes DESC LIMIT 1
             ''')
@@ -54,27 +49,24 @@ def register_user(data: dataType, conn, logger):
             else:
                 topic_title = "Apple"
 
-            ses = boto3.client('ses')
-            email_body = "<div><span>Thanks for signing up for Halal Vote! Click </span><span><a href='http://localhost:3000/%s?card=canvas&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(topic_title, username, activation_value)
+            sns = boto3.client('sns')
 
-            ses.send_email(
-                Source='votehalalharam@gmail.com',
-                Destination={
-                    'ToAddresses': [
-                        email,
-                    ]
-                },
-                Message={
-                    'Subject': {
-                        'Data': 'Complete Registration for halalvote.com'
-                    },
-                    'Body': {
-                        'Html': {
-                            'Data': email_body
-                        }
-                    }
-                }
+            message = {
+                "email": email,
+                "subject": "Complete Registration for halalvote.com",
+                "body": "<div><span>Thanks for signing up for Halal Vote! Click </span><span><a href='http://localhost:3000/%s?card=canvas&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(topic_title, username, activation_value)
+            }
+
+            sns.publish(
+                TopicArn='arn:aws:sns:us-east-1:678359485191:send-email',
+                Message=json.dumps(message)
             )
+
+            cur.execute('''
+                insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')
+            ''', {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
+            conn.commit()
+
     except Exception as e:
         return generate_error_response(500, str(e))
 
