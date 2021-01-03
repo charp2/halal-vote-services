@@ -33,7 +33,7 @@ def login(data: dataType, ip_address: str, conn, logger):
 
             # if user is not active or deleted then return 403
             if fetched_active_status == "INACTIVE":
-                return generate_error_response(403, "User is INACTIVE")
+                return generate_error_response(403, "User is INACTIVE. Check email to activate or re-register.")
             elif fetched_active_status == "DELETED":
                 return generate_error_response(403, "User is DELETED")
             elif fetched_password == check_hash:
