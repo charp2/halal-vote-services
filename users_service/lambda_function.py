@@ -14,6 +14,8 @@ from users_service.user_created_topics import user_created_topics
 from users_service.user_voted_topics import user_voted_topics
 from users_service.user_comments import user_comments
 from users_service.get_users import get_users
+from users_service.send_forgot_password_email import send_forgot_password_email
+from users_service.change_password import change_password
 from utils import valid_user
 from utils import get_response_headers
 
@@ -27,7 +29,7 @@ db_name = rds_config.db_name
 logger = logging.getLogger()
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/activate-user", "/login", "/logout", "/user-created-topics", "/user-voted-topics", "/user-comments", "/get-users"]
+no_session_token = ["/register-user", "/activate-user", "/login", "/logout", "/user-created-topics", "/user-voted-topics", "/user-comments", "/get-users", "/send-forgot-password-email", "/change-password"]
 
 # verify db connection
 try:
@@ -88,6 +90,11 @@ def handler(event: eventType, context):
         responseStatus, responseBody = user_comments(requestParams, requestHeaders, conn, logger)
     elif path == '/get-users':
         responseStatus, responseBody = get_users(requestParams, requestHeaders, conn, logger)
+    elif path == '/send-forgot-password-email':
+        email = requestParams['email']
+        responseStatus, responseBody = send_forgot_password_email(email, conn, logger)
+    elif path == '/change-password':
+        responseStatus, responseBody = change_password(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
