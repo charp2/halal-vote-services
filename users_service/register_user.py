@@ -23,13 +23,13 @@ def register_user(data: dataType, conn, logger):
     activation_value = token_hex(10)
 
     if not email:
-        return generate_error_response(500, "Invalid email passed in")
+        return generate_error_response(400, "Invalid email passed in")
 
     if not username:
-        return generate_error_response(500, "Invalid username passed in")
+        return generate_error_response(400, "Invalid username passed in")
 
     if not password:
-        return generate_error_response(500, "Invalid password passed in")
+        return generate_error_response(400, "Invalid password passed in")
 
     hashed_password = create_hashed_password(password, salt)
     logger.info(hashed_password)
@@ -37,10 +37,24 @@ def register_user(data: dataType, conn, logger):
     try:
         with conn.cursor() as cur:
             cur.execute('''
+                select username, email, activeStatus from Users
+                where email=%(email)s or username=%(username)s
+            ''', {'email': email, 'username': username})
+
+            results = cur.fetchall()
+            if results:
+                for result in results:
+                    used_username, used_email, active_status = result
+
+                    if used_email == email and (used_username != username or active_status != "INACTIVE"):
+                        return generate_error_response(400, "Email already in use")
+                    if used_username == username and (used_email != email or active_status != "INACTIVE"):
+                        return generate_error_response(400, "Username already in use")
+
+            cur.execute('''
                 select topicTitle from Topics
                 ORDER BY numVotes DESC LIMIT 1
             ''')
-            conn.commit()
 
             result = cur.fetchone()
 
@@ -63,11 +77,13 @@ def register_user(data: dataType, conn, logger):
             )
 
             cur.execute('''
-                insert into Users (username, email, password, salt, sessionToken, activeStatus) values(%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')
+                insert into Users (username, email, password, salt, sessionToken, activeStatus) 
+                values (%(username)s, %(email)s, %(password)s, %(salt)s, %(activationValue)s, 'INACTIVE')
+                on duplicate key update `password` = values(`password`), `salt` = values(`salt`), `sessionToken` = values(`sessionToken`)
             ''', {'username': username, 'email': email, 'password': hashed_password, 'salt': salt, 'activationValue': activation_value})
             conn.commit()
 
     except Exception as e:
-        return generate_error_response(500, str(e))
+        return generate_error_response(500, "There was an error")
 
     return generate_success_response(username)
