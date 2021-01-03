@@ -2,12 +2,12 @@
 from secrets import token_hex
 import json
 import boto3
-import urllib.parse
 
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
 from utils import generate_timestamp
+from users_service.utils import get_hyperlink_base_url
 
 def send_forgot_password_email(email: str, conn, logger):
     reset_token = token_hex(10)
@@ -30,24 +30,14 @@ def send_forgot_password_email(email: str, conn, logger):
             else:
                 return generate_error_response(500, "Email provided is not in use")
 
-            cur.execute('''
-                select topicTitle from Topics
-                ORDER BY numVotes DESC LIMIT 1
-            ''')
-
-            result = cur.fetchone()
-
-            if result:
-                topic_title = urllib.parse.quote(result[0])
-            else:
-                topic_title = "Apple"
-
             sns = boto3.client('sns')
+
+            hyperlink_base_url = get_hyperlink_base_url(conn)
 
             message = {
                 "email": email,
                 "subject": "Forgot password for halalvote.com",
-                "body": "<div><span>You requested a change of password for user <b>%s</b>. Click </span><span><a href='http://localhost:3000/%s?card=canvas&loginScreen=changePasswordPage&username=%s&passwordResetToken=%s'>here</a></span><span> to reset your password.</span></div>" %(username, topic_title, username, reset_token)
+                "body": "<div><span>You requested a change of password for user <b>%s</b>. Click </span><span><a href='%s&loginScreen=changePasswordPage&username=%s&passwordResetToken=%s'>here</a></span><span> to reset your password.</span></div>" %(username, hyperlink_base_url, username, reset_token)
             }
 
             sns.publish(
