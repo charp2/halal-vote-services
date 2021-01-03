@@ -57,8 +57,8 @@ def register_user(data: dataType, conn, logger):
 
             message = {
                 "email": email,
-                "subject": "Complete Registration for halalvote.com",
-                "body": "<div><span>Thanks for signing up for Halal Vote! Click </span><span><a href='%s&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(hyperlink_base_url, username, activation_value)
+                "subject": "halalvote.com Account Activation",
+                "body": "<div><span>Click </span><span><a href='%s&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(hyperlink_base_url, username, activation_value)
             }
 
             sns.publish(
