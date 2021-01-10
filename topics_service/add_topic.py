@@ -22,7 +22,8 @@ def add_topic(data: dataType, conn, logger):
             conn.commit()
 
             if num_rows == 0:
-                cur.execute('insert into Topics (topicTitle, username, halalPoints, haramPoints, numVotes) values(%(topicTitle)s, %(username)s, 0, 0, 0)', {'topicTitle': topic_title, 'username': username})
+                searchable_topic_title = topic_title.replace('.', ' .').replace('\'', '').replace('"', '').replace('-', ' ').replace('(', '').replace(')', '').replace('/', ' ')
+                cur.execute('insert into Topics (topicTitle, searchableTopicTitle, username, halalPoints, haramPoints, numVotes) values(%(topicTitle)s, %(searchableTopicTitle)s, %(username)s, 0, 0, 0)', {'topicTitle': topic_title, 'searchableTopicTitle': searchable_topic_title, 'username': username})
                 
                 if image:
                     cur.execute('insert into TopicImages (topicTitle, username, image) values(%(topicTitle)s, %(username)s, %(image)s)', {'topicTitle': topic_title, 'username': username, 'image': image})

@@ -12,7 +12,8 @@ dataType = {
     "topicTitle": str,
     "username": str,
     "n": int,
-    "excludedIds": [int]
+    "excludedIds": [int],
+    "singleImageId": int
 }
 def get_topic_images(data: dataType, request_headers: any, conn, logger):
     # Access DB
@@ -22,10 +23,24 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
             username = data.get('username')
             n = int(data.get('n', sys.maxsize))
             excluded_ids = data.get('excludedIds', '').split()
+            single_image_id = data.get('singleImageId')
             sessiontoken = request_headers.get('sessiontoken', '')
 
             query = ''
             query_map = {}
+            result = []
+            if single_image_id != None:
+                query = '''
+                    select id, username, image, likes from TopicImages
+                    where topicTitle=%(topicTitle)s and id=%(id)s 
+                '''
+                query_map['id'] = single_image_id
+                query_map['topicTitle'] = topic_title
+
+                cur.execute(query, query_map)
+                conn.commit()
+                result = cur.fetchall()
+
             if username != None:
                 status_code, msg = valid_user(username, sessiontoken, conn, logger)
 
@@ -74,7 +89,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
             cur.execute(query, query_map)
             conn.commit()
 
-            result = cur.fetchall()
+            result += cur.fetchall()
             return generate_success_response(result)
 
     except Exception as e:
