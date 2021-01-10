@@ -36,8 +36,8 @@ def send_forgot_password_email(email: str, conn, logger):
 
             message = {
                 "email": email,
-                "subject": "Forgot password for halalvote.com",
-                "body": "<div><span>You requested a change of password for user <b>%s</b>. Click </span><span><a href='%s&loginScreen=changePasswordPage&username=%s&passwordResetToken=%s'>here</a></span><span> to reset your password.</span></div>" %(username, hyperlink_base_url, username, reset_token)
+                "subject": "Reset password for halalvote.com",
+                "body": "<div><span>You requested a change of password for user <b>%s</b>. Click </span><span><a href='%s&loginScreen=resetPasswordPage&username=%s&passwordResetToken=%s'>here</a></span><span> to reset your password.</span></div>" %(username, hyperlink_base_url, username, reset_token)
             }
 
             sns.publish(
