@@ -9,7 +9,7 @@ from utils import generate_success_response
 from utils import valid_user
 
 sort_query = '''
-    order by ((T.numVotes*2) + POWER(T.numComments, 1/2)*4 + POWER(T.numImages, 1/3)*5 - Abs(T.vote*100)) desc, T.timeStamp desc
+    order by ((T.numVotes*2) + POWER(T.numComments, 1/2)*4 + POWER(T.mediaLikes, 1/3)*5 - Abs(T.vote*100)) desc, T.timeStamp desc
 '''
 
 dataType = {
@@ -32,7 +32,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
     try:
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             query = '''
-                select Topics.*, 0 as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
+                select Topics.*, 0 as vote, SUM(CASE WHEN TopicImages.id IS NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes
                 from Topics left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
             '''
             query_map = {}
@@ -44,9 +44,10 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, (COUNT(*) * CASE WHEN TopicImages.id IS NULL THEN 0 ELSE 1 END) as numImages
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.id IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                     left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
+                    left join UserSeenMedia on TopicImages.id = UserSeenMedia.mediaId and UserSeenMedia.username = %(username)s
                 '''
                 query_map['username'] = username
 
@@ -61,13 +62,14 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     where Topics.topicTitle in %(topicTitles)s
                 '''
                 query_map['topicTitles']  = topic_titles
-            else:
-                query = '''select * from (''' + query + '''
-                group by Topics.topicTitle) as T
-                ''' + sort_query + '''
-                limit %(offset)s, %(n)s'''
-                query_map['offset'] = offset
-                query_map['n'] = n
+
+
+            query = '''select * from (''' + query + '''
+            group by Topics.topicTitle) as T
+            ''' + sort_query + '''
+            limit %(offset)s, %(n)s'''
+            query_map['offset'] = offset
+            query_map['n'] = n
 
             cur.execute(query, query_map)
             conn.commit()
