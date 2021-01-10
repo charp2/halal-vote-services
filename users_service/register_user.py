@@ -2,12 +2,12 @@
 from secrets import token_hex
 import json
 import boto3
-import urllib.parse
 
 # our imports
 from users_service.utils import create_hashed_password
 from utils import generate_error_response
 from utils import generate_success_response
+from users_service.utils import get_hyperlink_base_url
 
 dataType = {
     "email": str,
@@ -51,24 +51,14 @@ def register_user(data: dataType, conn, logger):
                     if used_username == username and (used_email != email or active_status != "INACTIVE"):
                         return generate_error_response(400, "Username already in use")
 
-            cur.execute('''
-                select topicTitle from Topics
-                ORDER BY numVotes DESC LIMIT 1
-            ''')
-
-            result = cur.fetchone()
-
-            if result:
-                topic_title = urllib.parse.quote(result[0])
-            else:
-                topic_title = "Apple"
-
             sns = boto3.client('sns')
+
+            hyperlink_base_url = get_hyperlink_base_url(conn)
 
             message = {
                 "email": email,
-                "subject": "Complete Registration for halalvote.com",
-                "body": "<div><span>Thanks for signing up for Halal Vote! Click </span><span><a href='http://localhost:3000/%s?card=canvas&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(topic_title, username, activation_value)
+                "subject": "halalvote.com Account Activation",
+                "body": "<div><span>Click </span><span><a href='%s&loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(hyperlink_base_url, username, activation_value)
             }
 
             sns.publish(
