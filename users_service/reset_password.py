@@ -12,7 +12,7 @@ dataType = {
     "resetToken": str
 }
 
-def change_password(data: dataType, conn, logger):
+def reset_password(data: dataType, conn, logger):
     username = data["username"]
     new_password = data["newPassword"]
     reset_token = data["resetToken"]
