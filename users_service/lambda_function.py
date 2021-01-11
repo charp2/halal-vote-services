@@ -16,6 +16,7 @@ from users_service.user_comments import user_comments
 from users_service.get_users import get_users
 from users_service.send_forgot_password_email import send_forgot_password_email
 from users_service.reset_password import reset_password
+from users_service.change_password import change_password
 from utils import valid_user
 from utils import get_response_headers
 
@@ -95,6 +96,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = send_forgot_password_email(email, conn, logger)
     elif path == '/reset-password':
         responseStatus, responseBody = reset_password(requestBody, conn, logger)
+    elif path == '/change-password':
+        responseStatus, responseBody = change_password(requestBody, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 

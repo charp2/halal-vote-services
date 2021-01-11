@@ -36,7 +36,7 @@ def reset_password(data: dataType, conn, logger):
                     return generate_error_response(403, "Unauthorized change of password")
                 
             else:
-                return generate_error_response(500, "Username does not exist")
+                return generate_error_response(404, "Username does not exist")
 
             cur.execute('''
                 update Users
@@ -45,7 +45,7 @@ def reset_password(data: dataType, conn, logger):
             ''', {'passwordResetToken': None, 'passwordResetTimestamp': None, 'password': create_hashed_password(new_password, fetched_salt), 'username': username})
             conn.commit()
 
-            return generate_success_response("Successfully changed password")
+            return generate_success_response("Successfully reset password")
 
     except Exception as e:
         return generate_error_response(500, "There was an error")
