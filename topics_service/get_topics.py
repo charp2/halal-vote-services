@@ -9,7 +9,7 @@ from utils import generate_success_response
 from utils import valid_user
 
 sort_query = '''
-    order by ((T.numVotes*2) + POWER(T.numComments, 1/2)*4 + POWER(T.mediaLikes, 1/3)*5 - Abs(T.vote*100)) desc, T.timeStamp desc
+    order by (POWER(T.numVotes, 1/2)*2 + POWER(T.numComments, 1/3)*4 + POWER(T.mediaLikes, 1/2)*5) desc, T.timeStamp desc
 '''
 
 dataType = {
@@ -44,7 +44,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.id IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.mediaId IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                     left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
                     left join UserSeenMedia on TopicImages.id = UserSeenMedia.mediaId and UserSeenMedia.username = %(username)s

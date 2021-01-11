@@ -48,8 +48,9 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select TopicImages.*, UserTopicImageLikes.imageId is not null as userLike
+                    select TopicImages.*, UserTopicImageLikes.imageId is not null as userLike, CASE WHEN UserSeenMedia.mediaId IS NULL THEN 1 ELSE 0 END as userSeen
                     from TopicImages left join UserTopicImageLikes on TopicImages.id = UserTopicImageLikes.imageId and UserTopicImageLikes.username = %(username)s
+                    left join UserSeenMedia on TopicImages.id = UserSeenMedia.mediaId and UserSeenMedia.username = %(username)s
                     where topicTitle=%(topicTitle)s
                 '''
                 query_map['username'] = username
@@ -62,7 +63,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                     query_map['excludedIds'] = excluded_ids
             
                 query = query + '''
-                    order by TopicImages.likes DESC
+                    order by userSeen DESC, TopicImages.likes DESC
                     limit %(n)s
                 '''
                 query_map['n'] = n
