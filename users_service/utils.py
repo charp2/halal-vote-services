@@ -27,18 +27,5 @@ def get_user_location(ip_address: str):
     #     return None
     return {"latitude": None, "longitude": None}
 
-def get_hyperlink_base_url(conn):
-    with conn.cursor() as cur:
-        cur.execute('''
-            select topicTitle from Topics
-            ORDER BY numVotes DESC LIMIT 1
-        ''')
-
-        result = cur.fetchone()
-
-        if result:
-            topic_title = urllib.parse.quote(result[0])
-        else:
-            topic_title = "Apple"
-
-        return "http://localhost:3000/%s?card=canvas" %(topic_title)
+def get_hyperlink_base_url():
+    return "http://localhost:3000/"

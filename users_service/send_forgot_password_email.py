@@ -32,7 +32,7 @@ def send_forgot_password_email(email: str, conn, logger):
 
             sns = boto3.client('sns')
 
-            hyperlink_base_url = get_hyperlink_base_url(conn)
+            hyperlink_base_url = get_hyperlink_base_url()
 
             message = {
                 "email": email,
