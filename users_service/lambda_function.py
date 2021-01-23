@@ -19,6 +19,7 @@ from users_service.send_forgot_password_email import send_forgot_password_email
 from users_service.reset_password import reset_password
 from users_service.change_password import change_password
 from users_service.delete_account import delete_account
+from users_service.username_available import username_available
 from utils import valid_user
 from utils import get_response_headers
 
@@ -32,7 +33,18 @@ db_name = rds_config.db_name
 logger = logging.getLogger()
 
 # apis not requiring sessionToken
-no_session_token = ["/register-user", "/activate-user", "/login", "/logout", "/user-created-topics", "/user-voted-topics", "/user-comments", "/get-users", "/send-forgot-password-email", "/reset-password"]
+no_session_token = [
+    "/register-user", 
+    "/activate-user", 
+    "/login", "/logout", 
+    "/user-created-topics", 
+    "/user-voted-topics", 
+    "/user-comments", 
+    "/get-users", 
+    "/send-forgot-password-email", 
+    "/reset-password", 
+    "/username-available"
+]
 
 # verify db connection
 try:
@@ -104,6 +116,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = change_password(requestBody, conn, logger)
     elif path == '/delete-account':
         responseStatus, responseBody = delete_account(requestBody, conn, logger)
+    elif path == '/username-available':
+        responseStatus, responseBody = username_available(requestParams, conn, logger)
     else:
         responseStatus, responseBody = 404, "No path found..."
 
