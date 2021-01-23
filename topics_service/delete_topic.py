@@ -27,6 +27,10 @@ def delete_topic(data: dataType, conn, logger):
 
             if cur.rowcount > 0:
                 cur.execute(
+                    '''delete from UserTopicVotes where topicTitle=%(topicTitle)s''',
+                    {'topicTitle': topic_title, 'username': username}
+                )
+                cur.execute(
                     '''select id from Comments where topicTitle=%(topicTitle)s''',
                     {'topicTitle': topic_title}
                 )
@@ -41,6 +45,10 @@ def delete_topic(data: dataType, conn, logger):
                     )
                     cur.execute(
                         '''delete from CommentsClosure where ancestor in %(ids)s or descendent in %(ids)s''',
+                        {'ids': comment_ids}
+                    )
+                    cur.execute(
+                        '''delete from UserCommentVotes where commentId in %(ids)s''',
                         {'ids': comment_ids}
                     )
                 
@@ -59,6 +67,10 @@ def delete_topic(data: dataType, conn, logger):
                     )
                     cur.execute(
                         '''delete from UserTopicImageLikes where imageId in %(ids)s''',
+                        {'ids': image_ids}
+                    )
+                    cur.execute(
+                        '''delete from UserSeenMedia where mediaId in %(ids)s''',
                         {'ids': image_ids}
                     )
                 
