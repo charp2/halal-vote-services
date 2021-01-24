@@ -20,6 +20,7 @@ from users_service.reset_password import reset_password
 from users_service.change_password import change_password
 from users_service.delete_account import delete_account
 from users_service.username_available import username_available
+from users_service.email_available import email_available
 from utils import valid_user
 from utils import get_response_headers
 
@@ -43,7 +44,8 @@ no_session_token = [
     "/get-users", 
     "/send-forgot-password-email", 
     "/reset-password", 
-    "/username-available"
+    "/username-available",
+    "/email-available"
 ]
 
 # verify db connection
@@ -118,6 +120,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = delete_account(requestBody, conn, logger)
     elif path == '/username-available':
         responseStatus, responseBody = username_available(requestParams, conn, logger)
+    elif path == '/email-available':
+        responseStatus, responseBody = email_available(requestParams, conn, logger)        
     else:
         responseStatus, responseBody = 404, "No path found..."
 
