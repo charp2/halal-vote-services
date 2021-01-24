@@ -114,3 +114,6 @@ def get_utc_offset(time):
 
     sign = '-' if diff_seconds > 0 else '+'
     return '%s%s:%s' %(sign, diff_hours, diff_minutes)
+
+def format_email(email: str):
+    return email.lower()

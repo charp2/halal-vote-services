@@ -7,11 +7,13 @@ import boto3
 from utils import generate_error_response
 from utils import generate_success_response
 from utils import generate_timestamp
+from utils import format_email
 from users_service.utils import get_hyperlink_base_url
 
 def send_forgot_password_email(email: str, conn, logger):
     reset_token = token_hex(10)
     reset_timestamp = generate_timestamp()
+    email = format_email(email)
 
     try:
         with conn.cursor() as cur:

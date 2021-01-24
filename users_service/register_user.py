@@ -7,6 +7,7 @@ import boto3
 from users_service.utils import create_hashed_password
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import format_email
 from users_service.utils import get_hyperlink_base_url
 
 dataType = {
@@ -24,6 +25,8 @@ def register_user(data: dataType, conn, logger):
 
     if not email:
         return generate_error_response(400, "Invalid email passed in")
+    else:
+        email = format_email(email)
 
     if not username:
         return generate_error_response(400, "Invalid username passed in")

@@ -4,7 +4,7 @@ import boto3
 def handler(event, context):
     try:
         sns_message = json.loads(event["Records"][0]["Sns"]["Message"])
-        email = sns_message["email"]
+        email = sns_message["email"].lower()
         subject = sns_message["subject"]
         body = sns_message["body"]
         

@@ -3,13 +3,14 @@
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
+from utils import format_email
 
 dataType = {
     "email": str
 }
 
 def email_available(data: dataType, conn, logger):
-    email = data["email"]
+    email = format_email(data["email"])
 
     try:
         with conn.cursor() as cur:
