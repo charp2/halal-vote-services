@@ -31,7 +31,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
             result = []
             if single_image_id != None:
                 query = '''
-                    select id, username, image, likes from TopicImages
+                    select id, username, image, likes, timeStamp from TopicImages
                     where topicTitle=%(topicTitle)s and id=%(id)s 
                 '''
                 query_map['id'] = single_image_id
@@ -69,7 +69,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                 query_map['n'] = n
             else:
                 query = '''
-                    select id, username, image, likes from TopicImages 
+                    select id, username, image, likes, timeStamp from TopicImages 
                     where topicTitle=%(topicTitle)s
                 '''
                 query_map['topicTitle'] = topic_title
