@@ -5,7 +5,7 @@ import pymysql
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
-from utils import get_utc_offset
+from utils import generate_timestamp
 from utils import get_time_floor
 from datetime import datetime, timedelta
 import math
@@ -13,8 +13,7 @@ import math
 dataType = {
     "topicTitle": str,
     "interval": str,
-    "numIntervals": str,
-    "userTimestamp": str
+    "numIntervals": str
 }
 def get_topic_analytics(data: dataType, conn, logger):
     # Access DB
@@ -23,17 +22,11 @@ def get_topic_analytics(data: dataType, conn, logger):
             topic_title = data['topicTitle']
             interval = data['interval'].lower()
             num_intervals = data.get('numIntervals', None)
-            user_time = datetime.fromisoformat(data['userTimestamp'])
-            end_time = get_time_floor(user_time)
+            current_time = generate_timestamp()
+            end_time = get_time_floor(current_time)
 
             if interval != "d" and interval != "w" and interval != "a":
                 return generate_error_response(400, "interval type is invalid")
-
-            timezone = get_utc_offset(user_time)
-            cur.execute('''
-                set time_zone = %(timezone)s
-            ''', {'timezone': timezone})
-            conn.commit()
 
             if interval == "a":
                 cur.execute('''
