@@ -65,7 +65,7 @@ def vote_topic(data: dataType, conn, logger):
                     rows_affected = cur.execute(query_string, query_params)
                     conn.commit()
 
-                    if rows_affected != 0 and vote != 0:
+                    if rows_affected != 0:
                         query_string, query_params = creatGetVoteCountQuery(topic_title)
                         cur.execute(query_string, query_params)
                         update_results = cur.fetchone()
@@ -81,7 +81,7 @@ def vote_topic(data: dataType, conn, logger):
                 rows_affected = cur.execute(query_string, query_params)
                 conn.commit()
 
-                if rows_affected != 0 and vote != 0:
+                if rows_affected != 0:
                     query_string, query_params = creatGetVoteCountQuery(topic_title)
                     cur.execute(query_string, query_params)
                     update_results = cur.fetchone()
@@ -94,47 +94,24 @@ def vote_topic(data: dataType, conn, logger):
                 vote_bit = int(vote/abs(vote)) if vote != 0 else 0
                 current_time = generate_timestamp()
 
-                if prev_vote_time != None and current_time < (prev_vote_time + timedelta(days=1)):
-                    if vote_bit == 0:
-                        cur.execute(
-                            '''
-                                delete from UserTopicVotes
-                                where username = %(username)s and topicTitle = %(topicTitle)s and current = true
-                            ''',
-                            {'username': username, 'topicTitle': topic_title}
-                        )
-                        conn.commit()
-                    else:
-                        cur.execute(
-                            '''
-                                update UserTopicVotes
-                                set vote = %(vote)s, voteTime = %(voteTime)s, latitude = %(latitude)s, longitude = %(longitude)s, halalPoints = %(halalPoints)s, haramPoints = %(haramPoints)s
-                                where username = %(username)s and topicTitle = %(topicTitle)s and current = true
-                            ''',
-                            {'vote': vote_bit, 'voteTime': current_time, 'latitude': latitude, 'longitude': longitude, 'halalPoints': halal_points, 'haramPoints': haram_points, 'username': username, 'topicTitle': topic_title}
-                        )
-                        conn.commit()
-                else:
-                    if prev_vote == None or (prev_vote != None and prev_vote != vote_bit):
-                        cur.execute(
-                            '''
-                                update UserTopicVotes
-                                set current = false, removalTime = %(removalTime)s
-                                where username = %(username)s and topicTitle = %(topicTitle)s and current = true
-                            ''',
-                            {'removalTime': current_time,'username': username, 'topicTitle': topic_title}
-                        )
-                        conn.commit()
+                if prev_vote != None and prev_vote != vote_bit:
+                    cur.execute(
+                        '''
+                            update UserTopicVotes
+                            set current = false, removalTime = %(removalTime)s
+                            where username = %(username)s and topicTitle = %(topicTitle)s and current = true
+                        ''',
+                        {'removalTime': current_time,'username': username, 'topicTitle': topic_title}
+                    )
 
-                    if vote_bit != 0:
-                        cur.execute(
-                            '''
-                                insert into UserTopicVotes (username, topicTitle, vote, latitude, longitude, halalPoints, haramPoints)
-                                values (%(username)s, %(topicTitle)s, %(vote)s, %(latitude)s, %(longitude)s, %(halalPoints)s, %(haramPoints)s)
-                            ''',
-                            {'username': username, 'topicTitle': topic_title, 'vote': vote_bit, 'latitude':latitude, 'longitude': longitude, 'halalPoints': halal_points, 'haramPoints': haram_points}
-                        )
-                        conn.commit()
+                cur.execute(
+                    '''
+                        insert into UserTopicVotes (username, topicTitle, vote, voteTime, latitude, longitude, halalPoints, haramPoints)
+                        values (%(username)s, %(topicTitle)s, %(vote)s, %(voteTime)s, %(latitude)s, %(longitude)s, %(halalPoints)s, %(haramPoints)s)
+                    ''',
+                    {'username': username, 'topicTitle': topic_title, 'vote': vote_bit, 'voteTime': current_time, 'latitude':latitude, 'longitude': longitude, 'halalPoints': halal_points, 'haramPoints': haram_points}
+                )
+                conn.commit()
                 
                 with conn.cursor(pymysql.cursors.DictCursor) as dict_cur:
                     dict_cur.execute(
