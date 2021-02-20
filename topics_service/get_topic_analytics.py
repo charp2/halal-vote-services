@@ -5,7 +5,7 @@ import pymysql
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
-from utils import get_utc_offset
+from utils import generate_timestamp
 from utils import get_time_floor
 from datetime import datetime, timedelta
 import math
@@ -13,8 +13,7 @@ import math
 dataType = {
     "topicTitle": str,
     "interval": str,
-    "numIntervals": str,
-    "userTimestamp": str
+    "numIntervals": str
 }
 def get_topic_analytics(data: dataType, conn, logger):
     # Access DB
@@ -23,17 +22,11 @@ def get_topic_analytics(data: dataType, conn, logger):
             topic_title = data['topicTitle']
             interval = data['interval'].lower()
             num_intervals = data.get('numIntervals', None)
-            user_time = datetime.fromisoformat(data['userTimestamp'])
-            end_time = get_time_floor(user_time)
+            current_time = generate_timestamp()
+            end_time = get_time_floor(current_time)
 
             if interval != "d" and interval != "w" and interval != "a":
                 return generate_error_response(400, "interval type is invalid")
-
-            timezone = get_utc_offset(user_time)
-            cur.execute('''
-                set time_zone = %(timezone)s
-            ''', {'timezone': timezone})
-            conn.commit()
 
             if interval == "a":
                 cur.execute('''
@@ -73,11 +66,9 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             halal_counts = [None] * num_intervals
             haram_counts = [None] * num_intervals
-            halal_count_removals = [None] * num_intervals
-            haram_count_removals = [None] * num_intervals
 
             cur.execute('''
-                select utv.vote, utv.voteTime, utv.halalPoints, utv.haramPoints, utv.removalTime from UserTopicVotes utv
+                select utv.voteTime, utv.halalPoints, utv.haramPoints from UserTopicVotes utv
                 inner join 
                     (
                         select 
@@ -93,35 +84,12 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             if vote_results:
                 for vote_result in vote_results:
-                    vote = vote_result["vote"]
                     vote_time = vote_result["voteTime"]
                     vote_time_floor = get_time_floor(vote_time)
                     halal_points = vote_result["halalPoints"]
                     haram_points = vote_result["haramPoints"]
-                    removal_time = vote_result["removalTime"]
 
                     vote_time_diff = (end_time - vote_time_floor).days if interval == "d" else (end_time - vote_time_floor).days // 7
-
-                    if removal_time:
-                        removal_time_floor = get_time_floor(removal_time)
-                        removal_time_diff = (end_time - removal_time_floor).days if interval == "d" else (end_time - vote_time_floor).days // 7
-
-                        if vote > 0:
-                            if vote_time_floor == removal_time_floor:
-                                halal_points -= 1
-                            else:
-                                if halal_count_removals[num_intervals - 1 - removal_time_diff] == None:
-                                    halal_count_removals[num_intervals - 1 - removal_time_diff] = [removal_time]
-                                else:
-                                    halal_count_removals[num_intervals - 1 - removal_time_diff].append(removal_time)
-                        elif vote < 0:
-                            if vote_time_floor == removal_time_floor:
-                                haram_points -= 1
-                            else:
-                                if haram_count_removals[num_intervals - 1 - removal_time_diff] == None:
-                                    haram_count_removals[num_intervals - 1 - removal_time_diff] = [removal_time]
-                                else:
-                                    haram_count_removals[num_intervals - 1 - removal_time_diff].append(removal_time)
 
                     current_halal_count = halal_counts[num_intervals - 1 - vote_time_diff]
                     current_haram_count = haram_counts[num_intervals - 1 - vote_time_diff]
@@ -149,28 +117,14 @@ def get_topic_analytics(data: dataType, conn, logger):
 
             for i in range(num_intervals):
                 if halal_counts[i] == None:
-                    if halal_count_removals[i] != None:
-                        last_halal_points -= len(halal_count_removals[i])
-                    
                     halal_counts[i] = last_halal_points
                 else:
-                    if halal_count_removals[i] != None:
-                        for j in range(len(halal_count_removals[i])):
-                            if halal_count_removals[i][j] > halal_counts[i]["time"]:
-                                halal_counts[i]["points"] -= 1
                     halal_counts[i] = halal_counts[i]["points"]
                     last_halal_points = halal_counts[i]
                 
                 if haram_counts[i] == None:
-                    if haram_count_removals[i] != None:
-                        last_haram_points -= len(haram_count_removals[i])
-                    
                     haram_counts[i] = last_haram_points
                 else:
-                    if haram_count_removals[i] != None:
-                        for j in range(len(haram_count_removals[i])):
-                            if haram_count_removals[i][j] > haram_counts[i]["time"]:
-                                haram_counts[i]["points"] -= 1
                     haram_counts[i] = haram_counts[i]["points"]
                     last_haram_points = haram_counts[i]
 
