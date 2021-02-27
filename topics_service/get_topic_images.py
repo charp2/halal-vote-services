@@ -12,7 +12,7 @@ dataType = {
     "topicTitle": str,
     "username": str,
     "n": int,
-    "excludedIds": [int],
+    "excludedIds": str,
     "singleImageId": int
 }
 def get_topic_images(data: dataType, request_headers: any, conn, logger):
@@ -40,6 +40,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                 cur.execute(query, query_map)
                 conn.commit()
                 result = cur.fetchall()
+                excluded_ids.append(single_image_id)
 
             if username != None:
                 status_code, msg = valid_user(username, sessiontoken, conn, logger)

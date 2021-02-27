@@ -14,8 +14,8 @@ dataType = {
 }
 
 def user_created_media(data: dataType, request_headers: any, conn, logger):
-    n = data.get('n', sys.maxsize)
-    offset = data.get('offset', 0)
+    n = int(data.get('n', sys.maxsize))
+    offset = int(data.get('offset', 0))
     username = data.get('username')
 
     # Access DB
