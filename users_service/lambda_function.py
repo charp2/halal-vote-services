@@ -11,6 +11,7 @@ from users_service.activate_user import activate_user
 from users_service.login import login
 from users_service.logout import logout
 from users_service.user_created_media import user_created_media
+from users_service.user_liked_media import user_liked_media
 from users_service.user_created_topics import user_created_topics
 from users_service.user_voted_topics import user_voted_topics
 from users_service.user_comments import user_comments
@@ -40,7 +41,8 @@ no_session_token = [
     "/activate-user", 
     "/login", "/logout", 
     "/user-created-media",
-    "/user-created-topics", 
+    "/user-created-topics",
+    "/user-liked-media", 
     "/user-voted-topics", 
     "/user-comments", 
     "/get-users", 
@@ -105,6 +107,8 @@ def handler(event: eventType, context):
         responseStatus, responseBody = user_created_media(requestParams, requestHeaders, conn, logger)
     elif path == '/user-created-topics':
         responseStatus, responseBody = user_created_topics(requestParams, requestHeaders, conn, logger)
+    elif path == '/user-liked-media':
+        responseStatus, responseBody = user_liked_media(requestParams, requestHeaders, conn, logger)
     elif path == '/user-voted-topics':
         responseStatus, responseBody = user_voted_topics(requestParams, requestHeaders, conn, logger)
     elif path == '/user-comments':
