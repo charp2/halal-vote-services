@@ -23,6 +23,10 @@ def delete_topic_image(data: dataType, conn, logger):
                     '''delete from UserTopicImageLikes where imageId=%(imageId)s''',
                     {'imageId': image_id}
                 )
+                cur.execute(
+                    '''delete from UserSeenMedia where mediaId=%(imageId)s''',
+                    {'imageId': image_id}
+                )
                 return generate_success_response("Removed topic image %d" %(image_id))
             else:
                 return generate_error_response(404, "Topic image not found")
