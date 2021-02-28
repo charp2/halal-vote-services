@@ -27,7 +27,7 @@ def see_media(data: dataType, request_headers: any, conn, logger):
 
                 if (alreadySeen==0):
                     query = '''
-                        insert ignore into UserSeenMedia (username, mediaId) values(%(username)s, %(mediaId)s)
+                        insert into UserSeenMedia (username, mediaId) values(%(username)s, %(mediaId)s)
                     '''
                     cur.execute(query, query_map)
                     conn.commit()
