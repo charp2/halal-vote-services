@@ -14,8 +14,8 @@ dataType = {
 }
 
 def user_liked_media(data: dataType, request_headers: any, conn, logger):
-    n = data.get('n', sys.maxsize)
-    offset = data.get('offset', 0)
+    n = int(data.get('n', sys.maxsize))
+    offset = int(data.get('offset', 0))
     username = data.get('username')
 
     # Access DB
@@ -23,7 +23,10 @@ def user_liked_media(data: dataType, request_headers: any, conn, logger):
         with conn.cursor(pymysql.cursors.DictCursor) as cur:
             if username != None:
                 query = '''
-                            select * from UserTopicImageLikes where username = %(username)s
+                            select * from TopicImages
+                            left join UserTopicImageLikes
+                            on UserTopicImageLikes.imageId = TopicImages.id
+                            where UserTopicImageLikes.username = %(username)s
                             limit %(offset)s, %(n)s
                         '''
                 query_map = {'username': username, 'offset': offset, 'n': n}
