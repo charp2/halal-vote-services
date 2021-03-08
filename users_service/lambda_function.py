@@ -42,7 +42,6 @@ no_session_token = [
     "/login", "/logout", 
     "/user-created-media",
     "/user-created-topics",
-    "/user-liked-media", 
     "/user-voted-topics", 
     "/user-comments", 
     "/get-users", 
@@ -78,31 +77,29 @@ eventType = {
 # lambda entry point
 def handler(event: eventType, context):
     path = event['path']
+    requestHeaders = event['headers']
 
     if event['httpMethod'] == 'POST':
-        requestBody = json.loads(event['body'])
+        requestParams = json.loads(event['body'])
     elif event['httpMethod'] == 'GET':
         requestParams = event['queryStringParameters']
 
-    requestHeaders = event['headers']
-
     if path not in no_session_token:
-        status_code, msg = valid_user(requestBody.get('username'), requestHeaders.get('sessiontoken'), conn, logger)
-
-        if status_code != 200:
-            return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
+            status_code, msg = valid_user(requestParams.get('username'), requestHeaders.get('sessiontoken'), conn, logger)
+            if status_code != 200:
+                return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
 
     if path == '/register-user':
-        responseStatus, responseBody = register_user(requestBody, conn, logger)
+        responseStatus, responseBody = register_user(requestParams, conn, logger)
     elif path == '/activate-user':
         username = requestParams['username']
         value = requestParams['value']
         responseStatus, responseBody = activate_user(username, value, conn, logger)
     elif path == '/login':
         ip_address = requestHeaders['X-Forwarded-For']
-        responseStatus, responseBody = login(requestBody, ip_address, conn, logger)
+        responseStatus, responseBody = login(requestParams, ip_address, conn, logger)
     elif path == '/logout':
-        responseStatus, responseBody = logout(requestBody, requestHeaders['sessionToken'], conn, logger)
+        responseStatus, responseBody = logout(requestParams, requestHeaders['sessionToken'], conn, logger)
     elif path == '/user-created-media':
         responseStatus, responseBody = user_created_media(requestParams, requestHeaders, conn, logger)
     elif path == '/user-created-topics':
@@ -114,18 +111,18 @@ def handler(event: eventType, context):
     elif path == '/user-comments':
         responseStatus, responseBody = user_comments(requestParams, requestHeaders, conn, logger)
     elif path == '/user-see-media':
-        responseStatus, responseBody = see_media(requestBody, requestHeaders, conn, logger)
+        responseStatus, responseBody = see_media(requestParams, requestHeaders, conn, logger)
     elif path == '/get-users':
         responseStatus, responseBody = get_users(requestParams, requestHeaders, conn, logger)
     elif path == '/send-forgot-password-email':
         email = requestParams['email']
         responseStatus, responseBody = send_forgot_password_email(email, conn, logger)
     elif path == '/reset-password':
-        responseStatus, responseBody = reset_password(requestBody, conn, logger)
+        responseStatus, responseBody = reset_password(requestParams, conn, logger)
     elif path == '/change-password':
-        responseStatus, responseBody = change_password(requestBody, conn, logger)
+        responseStatus, responseBody = change_password(requestParams, conn, logger)
     elif path == '/delete-account':
-        responseStatus, responseBody = delete_account(requestBody, conn, logger)
+        responseStatus, responseBody = delete_account(requestParams, conn, logger)
     elif path == '/username-available':
         responseStatus, responseBody = username_available(requestParams, conn, logger)
     elif path == '/email-available':

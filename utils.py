@@ -59,12 +59,12 @@ def valid_user(username: str, session_token: str, conn, logger):
             if results:
                 retrieved_session_token, session_timestamp, active_status = results
             else:
-                return generate_error_response(401, "User not found")
+                return generate_error_response(404, "User not found")
 
-            if active_status != "ACTIVE":
+            if session_token != retrieved_session_token:
+                return generate_error_response(403, "Access to resource forbidden")
+            elif active_status != "ACTIVE":
                 return generate_error_response(401, "User is Not ACTIVE")
-            elif session_token != retrieved_session_token:
-                return generate_error_response(401, "User Not Authorized")
             elif is_session_expired(session_timestamp):
                 return generate_error_response(401, "Session Expired")
             else:
