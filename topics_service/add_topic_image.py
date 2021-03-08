@@ -1,5 +1,6 @@
 # standard python imports
 import json
+import os
 
 # our imports
 from utils import generate_error_response
@@ -40,8 +41,9 @@ presignedPostDataType = {
 }
 def presigned_media_upload(data: presignedPostDataType):
     object_key = data.get('objectKey')
+    hv_media_bucket_name = os.environ["HV_MEDIA_BUCKET_NAME"]
 
-    presigned_post = create_presigned_post('hv-media', object_key)
+    presigned_post = create_presigned_post(hv_media_bucket_name, object_key)
 
     if presigned_post != None:
         return generate_success_response(presigned_post)

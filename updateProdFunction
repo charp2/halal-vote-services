@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+# zipping
+rm function.zip || true
+cd .venv/lib/python3.7/site-packages/
+zip -r9 ../../../../function.zip .
+cd ../../../../
+zip -R function.zip "$1_service/*.py"
+zip -R function.zip utils.py
+
+# update aws lambda
+aws lambda update-function-code --function-name "$1-prod" --zip-file fileb://function.zip

@@ -7,4 +7,4 @@ rm function.zip || true
 zip -R function.zip "email_service/*.py"
 
 # update aws lambda
-aws lambda update-function-code --function-name EmailPublisher --zip-file fileb://function.zip
+aws lambda update-function-code --function-name email-publisher-prod --zip-file fileb://function.zip

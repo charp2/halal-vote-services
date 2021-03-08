@@ -2,6 +2,7 @@
 from secrets import token_hex
 import json
 import boto3
+import os
 
 # our imports
 from users_service.utils import create_hashed_password
@@ -64,8 +65,9 @@ def register_user(data: dataType, conn, logger):
                 "body": "<div><span>Click </span><span><a href='%s?loginScreen=loadingActivation&username=%s&activationValue=%s'>here</a></span><span> to activate your account.</span></div>" %(hyperlink_base_url, username, activation_value)
             }
 
+            send_email_topic_arn = os.environ["SEND_EMAIL_TOPIC_ARN"]
             sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:678359485191:send-email',
+                TopicArn=send_email_topic_arn,
                 Message=json.dumps(message)
             )
 

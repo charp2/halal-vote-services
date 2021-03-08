@@ -51,13 +51,13 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['username'] = username
 
-            if excluded_topics != None and topic_titles == None:
+            if excluded_topics and not topic_titles:
                 query = query + '''
                     where Topics.topicTitle not in %(excludedTopics)s
                 '''
                 query_map['excludedTopics'] = excluded_topics
 
-            if topic_titles != None and excluded_topics == None:
+            if topic_titles and not excluded_topics:
                 query = query + '''
                     where Topics.topicTitle in %(topicTitles)s
                 '''

@@ -2,6 +2,7 @@
 from secrets import token_hex
 import json
 import boto3
+import os
 
 # our imports
 from utils import generate_error_response
@@ -42,8 +43,10 @@ def send_forgot_password_email(email: str, conn, logger):
                 "body": "<div><span>You requested a change of password for user <b>%s</b>. Click </span><span><a href='%s?loginScreen=resetPasswordPage&username=%s&passwordResetToken=%s'>here</a></span><span> to reset your password.</span></div>" %(username, hyperlink_base_url, username, reset_token)
             }
 
+            send_email_topic_arn = os.environ["SEND_EMAIL_TOPIC_ARN"]
+
             sns.publish(
-                TopicArn='arn:aws:sns:us-east-1:678359485191:send-email',
+                TopicArn=send_email_topic_arn,
                 Message=json.dumps(message)
             )
 

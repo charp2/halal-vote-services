@@ -4,9 +4,9 @@ import logging
 import json
 import pymysql
 import boto3
+import os
 
 # our imports
-import rds_config
 from utils import generate_error_response
 from utils import generate_success_response
 from utils import get_response_headers
@@ -16,13 +16,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # s3 settings
-bucket_name = 'hv-media'
+bucket_name = os.environ["HV_MEDIA_BUCKET_NAME"]
 
 # rds settings
-rds_host  = rds_config.db_host
-name = rds_config.db_username
-password = rds_config.db_password
-db_name = rds_config.db_name
+rds_host  = os.environ["DB_HOST"]
+name = os.environ["DB_USERNAME"]
+password = os.environ["DB_PASSWORD"]
+db_name = os.environ["DB_NAME"]
 
 # verify db connection
 try:

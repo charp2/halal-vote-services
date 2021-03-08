@@ -3,9 +3,9 @@ import sys
 import logging
 import pymysql
 import json
+import os
 
 # our imports
-import rds_config
 from topics_service.add_topic import add_topic
 from topics_service.delete_topic import delete_topic
 from topics_service.get_topics import get_topics
@@ -21,10 +21,10 @@ from utils import valid_user
 from utils import get_response_headers
 
 # rds settings
-rds_host  = rds_config.db_host
-name = rds_config.db_username
-password = rds_config.db_password
-db_name = rds_config.db_name
+rds_host  = os.environ["DB_HOST"]
+name = os.environ["DB_USERNAME"]
+password = os.environ["DB_PASSWORD"]
+db_name = os.environ["DB_NAME"]
 
 # logging config
 logger = logging.getLogger()
