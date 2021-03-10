@@ -4,7 +4,7 @@ set -e
 
 # zipping
 rm function.zip || true
-cd .venv/lib/python3.7/site-packages/
+cd .venv/lib/python3.8/site-packages/
 zip -r9 ../../../../function.zip .
 cd ../../../../
 zip -R function.zip "$1_service/*.py"
