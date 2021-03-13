@@ -19,11 +19,11 @@ Set Pipenv to install dependencies to this directory:
 
 Install dependencies using Pipenv:
 
-`pipenv install --python 3.7`
+`pipenv install --python 3.8`
 
 NOTE: You must have Python 3.7 installed for this to work. If you don't, first do so as follows:
 
-`brew install python@3.7`
+`brew install python@3.8`
 
 Then follow the cli output to set your PATH.
 
