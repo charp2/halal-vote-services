@@ -20,12 +20,12 @@ def login(data: dataType, ip_address: str, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select password, salt, sessionToken, sessionTimestamp, activeStatus, lastIPAddress from Users where username=%(username)s", {'username': username})
+            cur.execute("select username, password, salt, sessionToken, sessionTimestamp, activeStatus, lastIPAddress from Users where username=%(username)s", {'username': username})
             results = cur.fetchone()
             conn.commit()
 
             if results:
-                fetched_password, fetched_salt, fetched_session_token, fetched_session_timestamp, fetched_active_status, fetched_ip_address = results
+                fetched_username, fetched_password, fetched_salt, fetched_session_token, fetched_session_timestamp, fetched_active_status, fetched_ip_address = results
             else:
                 return generate_error_response(404, "User not found")
 
@@ -68,7 +68,10 @@ def login(data: dataType, ip_address: str, conn, logger):
                     
                     new_session_token = fetched_session_token
 
-                return generate_success_response(new_session_token)
+                return generate_success_response({
+                    'sessiontoken': new_session_token,
+                    'username': fetched_username
+                })
             else:
                 return generate_error_response(401, "Password is incorrect")
 

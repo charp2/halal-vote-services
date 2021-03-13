@@ -28,4 +28,4 @@ def get_user_location(ip_address: str):
     return {"latitude": None, "longitude": None}
 
 def get_hyperlink_base_url():
-    return "http://localhost:3000/"
+    return "https://haramvote.com/"
