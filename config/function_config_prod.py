@@ -1,0 +1,1 @@
+hyperlink_base_url = "https://haramvote.com/"

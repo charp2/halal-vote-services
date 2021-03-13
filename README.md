@@ -27,10 +27,10 @@ NOTE: You must have Python 3.8 installed for this to work. If you don't, first d
 
 Then follow the cli output to set your PATH.
 
-Now you can run `~/halal-vote-services$ ./updateFunction {service} {aws_password}` anytime code is updated.
+Now you can run `~/halal-vote-services$ ./updateDevFunction {service}` anytime code is updated.
 
 Note that the updateFunction script takes two arguments- 
 1) The name of the lambda you want to update (`topics`, `comment`, `users`)
 2) The aws password for a user account which has permission to update the lambda
 
-*MAKE SURE YOU GIVE THE updateFunction SCRIPT PERSMISSION TO EXECUTE BY RUNNING `chmod +x ./updateFunction`*
+*MAKE SURE YOU GIVE THE updateFunction SCRIPT PERSMISSION TO EXECUTE BY RUNNING `chmod +x ./updateDevFunction`*

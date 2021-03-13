@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import requests
 import urllib.parse
+import config.function_config as config
 
 # our imports
 from utils import generate_timestamp
@@ -28,4 +29,4 @@ def get_user_location(ip_address: str):
     return {"latitude": None, "longitude": None}
 
 def get_hyperlink_base_url():
-    return "https://haramvote.com/"
+    return config.hyperlink_base_url
