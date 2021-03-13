@@ -1,6 +1,6 @@
 **Pre-reqs: 
 * Have a working aws cli with admin access to the halalharam aws account
-* Brew install python3.7 (if you do any other version, update the updateFunction script to reflect that)
+* Brew install python3.8 (if you do any other version, update the updateFunction script to reflect that)
 **
 
 This is a python service for interacting with the haram-halal-db MySql database
@@ -21,7 +21,7 @@ Install dependencies using Pipenv:
 
 `pipenv install --python 3.8`
 
-NOTE: You must have Python 3.7 installed for this to work. If you don't, first do so as follows:
+NOTE: You must have Python 3.8 installed for this to work. If you don't, first do so as follows:
 
 `brew install python@3.8`
 

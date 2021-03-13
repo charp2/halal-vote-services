@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+# zipping
+rm function.zip || true
+zip -R function.zip "email_service/*.py"
+
+# update aws lambda
+aws lambda update-function-code --function-name email-publisher-dev --zip-file fileb://function.zip
