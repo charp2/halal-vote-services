@@ -43,7 +43,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                 excluded_ids.append(single_image_id)
 
             if username != None:
-                status_code, msg = valid_user(username, sessiontoken, conn, logger)
+                status_code, msg = valid_user(username, sessiontoken, conn, logger, False)
 
                 if status_code != 200:
                     return generate_error_response(status_code, msg)

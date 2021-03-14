@@ -12,6 +12,9 @@ logger = logging.getLogger()
 # response headers
 response_headers = {'Access-Control-Allow-Origin': '*'}
 
+#super username
+superUserName = 'OP'
+
 def create_presigned_post(bucket_name, object_name, fields=None, conditions=None, expiration=120):
     """Generate a presigned URL S3 POST request to upload a file
 
@@ -43,7 +46,7 @@ def create_presigned_post(bucket_name, object_name, fields=None, conditions=None
     # The response contains the presigned URL and required fields
     return response
 
-def valid_user(username: str, session_token: str, conn, logger):
+def valid_user(username: str, session_token: str, conn, logger, isSuperUser: bool):
     if not username:
         return generate_error_response(400, "no username passed in")
 
@@ -52,7 +55,7 @@ def valid_user(username: str, session_token: str, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': username})
+            cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': superUserName if isSuperUser else username})
             results = cur.fetchone()
             conn.commit()
 

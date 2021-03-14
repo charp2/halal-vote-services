@@ -6,7 +6,6 @@ import pymysql
 # our imports
 from utils import generate_error_response
 from utils import generate_success_response
-from utils import valid_user
 
 dataType = {
     'searchTerm': str,
