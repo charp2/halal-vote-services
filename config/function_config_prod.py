@@ -1,1 +1,1 @@
-hyperlink_base_url = "https://haramvote.com/"
+hyperlink_base_url = "https://halalvote.com/"
