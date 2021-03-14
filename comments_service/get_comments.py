@@ -15,7 +15,7 @@ sort_query_top_level = '''
 '''
 
 sort_query_replies = '''
-    order by (25 * (upVotes + downVotes + 1)) / POWER(GREATEST(1, TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP())), -1/2)*100 desc,
+    order by (25 * GREATEST(1, (upVotes - 4))) / POWER(GREATEST(1, TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP())), -1/2)*100 desc,
     timeStamp asc
 '''
 
