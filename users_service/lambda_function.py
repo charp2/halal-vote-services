@@ -42,7 +42,6 @@ no_session_token = [
     "/login", "/logout", 
     "/user-created-media",
     "/user-created-topics",
-    "/user-voted-topics", 
     "/user-comments", 
     "/get-users", 
     "/send-forgot-password-email", 
