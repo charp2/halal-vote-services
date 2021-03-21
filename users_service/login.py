@@ -10,7 +10,7 @@ from users_service.utils import create_session
 from users_service.utils import get_user_location
 
 dataType = {
-    "username": str,
+    "usernameOrEmail": str,
     "password": str
 }
 
@@ -20,7 +20,7 @@ def login(data: dataType, ip_address: str, conn, logger):
 
     try:
         with conn.cursor() as cur:
-            cur.execute("select username, password, salt, sessionToken, sessionTimestamp, activeStatus, lastIPAddress from Users where username=%(username)s", {'username': username})
+            cur.execute("select username, password, salt, sessionToken, sessionTimestamp, activeStatus, lastIPAddress from Users where username=%(username)s or email=%(username)s", {'username': username})
             results = cur.fetchone()
             conn.commit()
 
@@ -61,7 +61,7 @@ def login(data: dataType, ip_address: str, conn, logger):
                         location = get_user_location(ip_address)
 
                         if location != None:
-                            query_string = "update Users set lastIPAddress=%(lastIPAddress)s, lastLatitude=%(lastLatitude)s, lastLongitude=%(lastLongitude)s where username=%(username)s"
+                            query_string = "update Users set lastIPAddress=%(lastIPAddress)s, lastLatitude=%(lastLatitude)s, lastLongitude=%(lastLongitude)s where username=%(username)s or email=%(username)s"
                             query_params = {"lastIPAddress": ip_address, "lastLatitude": location["latitude"], "lastLongitude": location["longitude"], "username": username}
                             cur.execute(query_string, query_params)
                             conn.commit()
