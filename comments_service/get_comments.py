@@ -14,6 +14,11 @@ sort_query_top_level = '''
     timeStamp desc
 '''
 
+sort_query_top_level_order_override = '''
+    order by id=%(singleCommentId)s desc, (25 * (upVotes + downVotes + 1)) / GREATEST(1, POWER(TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP()), 1/2)) desc,
+    timeStamp desc
+'''
+
 sort_query_replies = '''
     order by (25 * GREATEST(1, (upVotes - 4))) / POWER(GREATEST(1, TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP())), -1/2)*100 desc,
     timeStamp asc
@@ -46,16 +51,14 @@ def get_comments(data: dataType, conn, logger):
                 parent_depth = get_parent_depth(conn, parent_id)
 
                 if parent_depth_found(parent_depth):
-                    comment_rows = fetch_comments(conn, topic_title, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, parent_id=parent_id, requestors_username=username)
-                    comments_object = make_comments_object(comment_rows)
+                    comments_object = fetch_comments(conn, topic_title, comment_type, parent_depth, parent_depth + depth, n, excluded_comment_ids, logger=logger, parent_id=parent_id, requestors_username=username)
                     return generate_success_response(comments_object)
 
                 else:
                     return generate_error_response(404, "parentId does not exist")
 
             else:
-                comment_rows = fetch_comments(conn, topic_title, comment_type, 0, depth, n, excluded_comment_ids, single_comment_id, requestors_username=username)
-                comments_object = make_comments_object(comment_rows)
+                comments_object = fetch_comments(conn, topic_title, comment_type, 0, depth, n, excluded_comment_ids, logger=logger, single_comment_id=single_comment_id, requestors_username=username)
                 return generate_success_response(comments_object)
 
     except Exception as e:
@@ -64,9 +67,9 @@ def get_comments(data: dataType, conn, logger):
 def is_show_more_request(parent_id: int):
     return parent_id != None
 
-def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, single_comment_id=None, parent_id=None, requestors_username:str = None):
+def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, excluded_comment_ids, logger, single_comment_id=None, parent_id=None, requestors_username:str = None):
     sort_query = sort_query_replies if is_show_more_request(parent_id) else sort_query_top_level
-    with conn.cursor() as cur:
+    with conn.cursor(pymysql.cursors.DictCursor) as cur:
         query_map = {'startDepth': start_depth, 'endDepth': end_depth, 'n': n}
         
         if start_depth > 0:
@@ -104,41 +107,30 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
         if single_comment_id:
             query = '''
                 select * from Comments
-                where topicTitle=%(topicTitle)s and id=%(singleCommentId)s
+                where topicTitle=%(topicTitle)s and %(startDepth)s < depth and depth <= %(endDepth)s
             '''
             query_map['singleCommentId'] = single_comment_id
+            sort_query = sort_query_top_level_order_override
+
+        if requestors_username != None:
+            query = '''
+                select id, depth, topicTitle, timeStamp, c.username, comment, commentType, upVotes, downVotes, numReplies, CASE WHEN vote = 1 THEN 1 ELSE null END as userVote 
+                from (''' + query + ''') c
+                left join UserCommentVotes ucv
+                on (c.id = ucv.commentId) and ucv.username = %(requestorsUsername)s
+            '''
+            query_map['requestorsUsername'] = requestors_username
 
         query = query + sort_query + '''
             limit %(n)s
         '''
 
-        relevant_comments = []
-
         cur.execute(query, query_map)
         conn.commit()
         top_rated_result = cur.fetchall()
+        logger.info(top_rated_result)
 
-        if top_rated_result:
-            comment_ids = flatten_result(top_rated_result)
-
-            cur.execute(
-                '''
-                    select ancestor from CommentsClosure
-                    join Comments on ancestor = id
-                    where descendent in %(commentIds)s and depth > %(startDepth)s
-                ''',
-                {'commentIds': comment_ids, 'startDepth': start_depth}
-            )
-            conn.commit()
-            ancestors_result = cur.fetchall()
-
-            if ancestors_result:
-                backtracked_comment_ids = flatten_result(ancestors_result)
-                comment_ids = comment_ids + backtracked_comment_ids
-
-            relevant_comments = fetch_relevant_comments(conn, comment_ids, requestors_username=requestors_username, parent_id=parent_id)
-
-        return relevant_comments
+        return top_rated_result
 
 def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None, parent_id = None):
     sort_query = sort_query_replies if is_show_more_request(parent_id) else sort_query_top_level
