@@ -5,6 +5,7 @@ import json
 import pymysql
 import boto3
 import os
+import re
 
 # our imports
 from utils import generate_error_response
@@ -51,7 +52,7 @@ def handler(event: eventType, context):
         s3_media = get_s3_media()
 
         diff_set = s3_media.difference(living_media)
-        if (len(diff_set) < len(s3_media)):
+        if (len(diff_set) < (len(s3_media) - 1)):
             num_deleted = delete_s3_media(diff_set)
 
         responseStatus, responseBody = generate_success_response(num_deleted)
@@ -74,7 +75,7 @@ def get_living_media():
 
         livingMedia = set()
         for row in result:
-            livingMedia.add(row[0].replace("https://{}.s3.amazonaws.com/".format(bucket_name), ''))
+            livingMedia.add(re.sub(r'(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b\/', '', row[0]))
 
         return livingMedia
 
