@@ -19,6 +19,11 @@ sort_query_top_level_order_override = '''
     timeStamp desc
 '''
 
+sort_query_top_level_order_override_from_reply = '''
+    order by id=(select id from Comments left join CommentsClosure on (id = ancestor) where descendent=%(singleCommentId)s) desc, (25 * (upVotes + downVotes + 1)) / GREATEST(1, POWER(TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP()), 1/2)) desc,
+    timeStamp desc
+'''
+
 sort_query_replies = '''
     order by (25 * GREATEST(1, (upVotes - 4))) / POWER(GREATEST(1, TIMESTAMPDIFF(HOUR, timeStamp, CURRENT_TIMESTAMP())), -1/2)*100 desc,
     timeStamp asc
@@ -91,6 +96,15 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
                     select * from Comments
                     where topicTitle=%(topicTitle)s and %(startDepth)s < depth and depth <= %(endDepth)s
                 '''
+            if single_comment_id:
+                if end_depth <= 1:
+                    sort_query = sort_query_top_level_order_override
+                elif end_depth >= 2:
+                    sort_query = sort_query_top_level_order_override_from_reply
+                    query_map['endDepth'] = 1
+
+                query_map['singleCommentId'] = single_comment_id
+            
             query_map['topicTitle'] = topic_title
             query_map['commentType'] = comment_type
 
@@ -103,14 +117,6 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
                 where c.id not in %(excludedCommentIds)s and c.ancestor is NULL
             '''
             query_map['excludedCommentIds'] = excluded_comment_ids
-
-        if single_comment_id:
-            query = '''
-                select * from Comments
-                where topicTitle=%(topicTitle)s and %(startDepth)s < depth and depth <= %(endDepth)s
-            '''
-            query_map['singleCommentId'] = single_comment_id
-            sort_query = sort_query_top_level_order_override
 
         if requestors_username != None:
             query = '''
@@ -127,8 +133,8 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
 
         cur.execute(query, query_map)
         conn.commit()
+        logger.info(cur._last_executed)
         top_rated_result = cur.fetchall()
-        logger.info(top_rated_result)
 
         return top_rated_result
 
