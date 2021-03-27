@@ -22,7 +22,6 @@ def login(data: dataType, ip_address: str, conn, logger):
         with conn.cursor() as cur:
             cur.execute("select username, password, salt, sessionToken, sessionTimestamp, activeStatus, lastIPAddress from Users where username=%(username)s or email=%(username)s", {'username': username})
             results = cur.fetchone()
-            conn.commit()
 
             if results:
                 fetched_username, fetched_password, fetched_salt, fetched_session_token, fetched_session_timestamp, fetched_active_status, fetched_ip_address = results
@@ -55,7 +54,6 @@ def login(data: dataType, ip_address: str, conn, logger):
 
                     query_string += " where username=%(username)s"
                     cur.execute(query_string, query_params)
-                    conn.commit()
                 else:
                     if is_ip_updated:
                         location = get_user_location(ip_address)
@@ -64,10 +62,10 @@ def login(data: dataType, ip_address: str, conn, logger):
                             query_string = "update Users set lastIPAddress=%(lastIPAddress)s, lastLatitude=%(lastLatitude)s, lastLongitude=%(lastLongitude)s where username=%(username)s or email=%(username)s"
                             query_params = {"lastIPAddress": ip_address, "lastLatitude": location["latitude"], "lastLongitude": location["longitude"], "username": username}
                             cur.execute(query_string, query_params)
-                            conn.commit()
                     
                     new_session_token = fetched_session_token
 
+                conn.commit()
                 return generate_success_response({
                     'sessiontoken': new_session_token,
                     'username': fetched_username
@@ -77,4 +75,5 @@ def login(data: dataType, ip_address: str, conn, logger):
 
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))

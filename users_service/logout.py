@@ -17,7 +17,6 @@ def logout(data: dataType, session_token, conn, logger):
         with conn.cursor() as cur:
             cur.execute("select sessionToken, activeStatus from Users where username=%(username)s", {'username': username})
             results = cur.fetchone()
-            conn.commit()
 
             if results:
                 fetched_session_token, fetched_active_status = results
@@ -42,4 +41,5 @@ def logout(data: dataType, session_token, conn, logger):
                 return generate_success_response("Already logged out")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))

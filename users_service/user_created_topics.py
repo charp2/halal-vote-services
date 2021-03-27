@@ -29,7 +29,6 @@ def user_created_topics(data: dataType, request_headers: any, conn, logger):
                         '''
                 query_map = {'username': username, 'offset': offset, 'n': n}
                 cur.execute(query, query_map)
-                conn.commit()
                 result = cur.fetchall()
                 return generate_success_response(result)
 

@@ -45,4 +45,5 @@ def change_password(data: dataType, conn, logger):
             return generate_success_response("Successfully changed password")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, "There was an error")

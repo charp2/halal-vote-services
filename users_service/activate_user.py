@@ -8,7 +8,6 @@ def activate_user(username: str, activation_value: str, conn, logger):
         with conn.cursor() as cur:
             cur.execute("select sessionToken, activeStatus from Users where username=%(username)s", {'username': username})
             results = cur.fetchone()
-            conn.commit()
 
             if results:
                 fetched_activation_value, fetched_active_status = results
@@ -32,4 +31,5 @@ def activate_user(username: str, activation_value: str, conn, logger):
                 return generate_success_response("%s is already ACTIVE!" %(username))
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))

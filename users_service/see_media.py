@@ -22,7 +22,6 @@ def see_media(data: dataType, request_headers: any, conn, logger):
                 query_map = {'username': username, 'mediaId': media_id}
 
                 cur.execute('select COUNT(*) as num from UserSeenMedia where username=%(username)s and mediaId=%(mediaId)s', query_map)
-                conn.commit()
                 alreadySeen = cur.fetchall()[0]['num']
 
                 if (alreadySeen==0):
@@ -36,4 +35,5 @@ def see_media(data: dataType, request_headers: any, conn, logger):
                     return generate_success_response('already seen')
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
