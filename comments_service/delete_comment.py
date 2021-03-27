@@ -33,6 +33,7 @@ def delete_comment(data: dataType, conn, logger):
                     {'id': id, 'username': username}
                 )
                 if cur.rowcount <= 0:
+                    conn.rollback()
                     return generate_error_response(500, "Unsuccesful delete attempt")
 
                 conn.commit()
@@ -62,6 +63,7 @@ def delete_comment(data: dataType, conn, logger):
                         {'id': id}
                     )
                 else:
+                    conn.rollback()
                     return generate_error_response(500, "Unsuccesful delete attempt")
 
                 conn.commit()
@@ -70,6 +72,7 @@ def delete_comment(data: dataType, conn, logger):
                 
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
 
 def has_descendent(conn, id: int):
@@ -77,7 +80,6 @@ def has_descendent(conn, id: int):
         cur.execute('''SELECT EXISTS (SELECT * FROM CommentsClosure WHERE ancestor=%(id)s)''', 
             {'id': id}
         )
-        conn.commit()
 
     return cur.fetchone()[0]
 
@@ -86,6 +88,5 @@ def has_ancestor(conn, id: int):
         cur.execute('''SELECT EXISTS (SELECT * FROM CommentsClosure WHERE descendent=%(id)s)''', 
             {'id': id}
         )
-        conn.commit()
 
     return cur.fetchone()[0]
