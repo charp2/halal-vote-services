@@ -35,14 +35,16 @@ def update_topic_image_like(data: dataType, conn, logger):
             cur.execute(query, {'id': image_id})
 
             cur.execute('select likes from TopicImages where id=%(imageId)s', {'imageId': image_id})
-            conn.commit()
 
             result = cur.fetchone()
 
             if result:
+                conn.commit()
                 return generate_success_response({'likes': result[0]})
             else:
+                conn.rollback()
                 return generate_error_response(404, "Image not found")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))

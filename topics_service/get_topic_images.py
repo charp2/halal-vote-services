@@ -38,7 +38,6 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                 query_map['topicTitle'] = topic_title
 
                 cur.execute(query, query_map)
-                conn.commit()
                 result = cur.fetchall()
                 excluded_ids.append(single_image_id)
 
@@ -89,7 +88,6 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
                 query_map['n'] = n
 
             cur.execute(query, query_map)
-            conn.commit()
 
             result += cur.fetchall()
             return generate_success_response(result)

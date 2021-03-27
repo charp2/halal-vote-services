@@ -72,7 +72,6 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
             query_map['n'] = n
 
             cur.execute(query, query_map)
-            conn.commit()
 
             result = cur.fetchall()
             return generate_success_response(result)

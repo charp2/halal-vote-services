@@ -26,7 +26,6 @@ def search_topics(data: dataType, conn, logger):
             query_map['limit'] = limit
 
             cur.execute(query, query_map)
-            conn.commit()
 
             result = cur.fetchall()
             return generate_success_response(result)

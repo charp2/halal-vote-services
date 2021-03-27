@@ -16,7 +16,6 @@ def delete_topic_image(data: dataType, conn, logger):
                 '''delete from TopicImages where id=%(imageId)s''',
                 {'imageId': image_id}
             )
-            conn.commit()
 
             if cur.rowcount > 0:
                 cur.execute(
@@ -27,9 +26,12 @@ def delete_topic_image(data: dataType, conn, logger):
                     '''delete from UserSeenMedia where mediaId=%(imageId)s''',
                     {'imageId': image_id}
                 )
+                conn.commit()
                 return generate_success_response("Removed topic image %d" %(image_id))
             else:
+                conn.rollback()
                 return generate_error_response(404, "Topic image not found")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))

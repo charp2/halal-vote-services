@@ -19,7 +19,6 @@ def add_topic(data: dataType, conn, logger):
             image = data.get('image')
 
             num_rows = cur.execute('select * from Topics where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
-            conn.commit()
 
             if num_rows == 0:
                 searchable_topic_title = topic_title.replace('.', ' .').replace('\'', '').replace('"', '').replace('-', ' ').replace('(', '').replace(')', '').replace('/', ' ')
@@ -34,4 +33,5 @@ def add_topic(data: dataType, conn, logger):
                 return generate_error_response(409, "Topic already exists")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
