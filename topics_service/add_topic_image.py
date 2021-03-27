@@ -21,11 +21,9 @@ def add_topic_image(data: addTopicDataType, conn, logger):
             image = data['image']
 
             num_rows = cur.execute('select * from Topics where topicTitle=%(topicTitle)s', {'topicTitle': topic_title})
-            conn.commit()
 
             if num_rows != 0:
                 cur.execute('insert into TopicImages (topicTitle, username, image) values(%(topicTitle)s, %(username)s, %(image)s)', {'topicTitle': topic_title, 'username': username, 'image': image})
-                conn.commit()
                 cur.execute('SELECT LAST_INSERT_ID()')
                 conn.commit()
                 return generate_success_response(cur.fetchall())
@@ -33,6 +31,7 @@ def add_topic_image(data: addTopicDataType, conn, logger):
                 return generate_error_response(404, "Topic not found")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
 
 
