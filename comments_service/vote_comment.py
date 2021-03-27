@@ -24,9 +24,11 @@ def vote_comment(data: dataType, conn, logger):
         else:
             add_user_comment_vote(conn, comment_id, username, vote)
 
+        conn.commit()
         return generate_success_response(vote)
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
 
 def vote_exists(prev_vote):
@@ -48,12 +50,10 @@ def update_user_comment_vote(conn, comment_id: int, username: str, vote: int, pr
             cur.execute('''delete from UserCommentVotes where (username = %(username)s) and (commentId = %(commentId)s)''', {'username': username, 'commentId': comment_id})
         elif vote != prev_vote:
             cur.execute('''update UserCommentVotes set vote = %(vote)s where username = %(username)s and commentId = %(commentId)s''', {'vote': vote, 'username': username, 'commentId': comment_id})
-        conn.commit()
 
 def add_user_comment_vote(conn, comment_id: int, username: str, vote: int):
     with conn.cursor() as cur:
         cur.execute('''insert into UserCommentVotes(username, commentId, vote) values (%(username)s, %(commentId)s, %(vote)s)''', {'username': username, 'commentId': comment_id, 'vote': vote})
-        conn.commit()
 
 
 def update_comment_vote(conn, comment_id, vote, prev_vote: int = None):
@@ -100,4 +100,3 @@ def update_comment_vote(conn, comment_id, vote, prev_vote: int = None):
                 '''
 
         cur.execute(query, {'id': comment_id})
-    conn.commit()
