@@ -35,6 +35,7 @@ def add_comment(data: dataType, conn, logger):
     try:
         if is_top_level_comment(parent_id):
             new_comment = insert_comment(conn, parent_id, topic_title, username, comment, comment_type, 1)
+            conn.commit()
             return generate_success_response(new_comment)
 
         else:
@@ -44,12 +45,15 @@ def add_comment(data: dataType, conn, logger):
 
                 update_closure_table(conn, parent_id, new_comment["id"])
 
+                conn.commit()
                 return generate_success_response(new_comment)
 
             else:
+                conn.rollback()
                 return generate_error_response(404, "parentId does not exist")
 
     except Exception as e:
+        conn.rollback()
         return generate_error_response(500, str(e))
 
 def is_top_level_comment(parent_id):
@@ -82,15 +86,11 @@ def insert_comment(conn, parent_id, topic_title, username, comment, comment_type
                 ''',
                 { "parentId": parent_id }
             )
-        
-        conn.commit()
 
         cur.execute('select * from Comments where id=(select LAST_INSERT_ID())')
-        conn.commit()
         return cur.fetchone()
 
 def update_closure_table(conn, parent_id, new_comment_id):
     with conn.cursor(pymysql.cursors.DictCursor) as cur:
         closure_values_map = {'parentId': parent_id, 'newCommentId': new_comment_id}
         cur.execute('insert into CommentsClosure (ancestor, descendent, isDirect) select ancestor, %(newCommentId)s, false from CommentsClosure where descendent=%(parentId)s union all select %(parentId)s, %(newCommentId)s, true', closure_values_map)
-        conn.commit()
