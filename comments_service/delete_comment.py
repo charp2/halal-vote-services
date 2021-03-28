@@ -33,7 +33,6 @@ def delete_comment(data: dataType, conn, logger):
                     {'id': id, 'username': username}
                 )
                 if cur.rowcount <= 0:
-                    conn.rollback()
                     return generate_error_response(500, "Unsuccesful delete attempt")
 
                 conn.commit()
@@ -63,7 +62,6 @@ def delete_comment(data: dataType, conn, logger):
                         {'id': id}
                     )
                 else:
-                    conn.rollback()
                     return generate_error_response(500, "Unsuccesful delete attempt")
 
                 conn.commit()
@@ -72,7 +70,6 @@ def delete_comment(data: dataType, conn, logger):
                 
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))
 
 def has_descendent(conn, id: int):

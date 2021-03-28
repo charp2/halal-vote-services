@@ -42,5 +42,4 @@ def delete_account(data: dataType, conn, logger):
             return generate_success_response("Successfully deleted %s" %(username))
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, "There was an error")    

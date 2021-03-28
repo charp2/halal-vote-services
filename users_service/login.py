@@ -75,5 +75,4 @@ def login(data: dataType, ip_address: str, conn, logger):
 
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

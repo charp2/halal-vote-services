@@ -49,11 +49,9 @@ def add_comment(data: dataType, conn, logger):
                 return generate_success_response(new_comment)
 
             else:
-                conn.rollback()
                 return generate_error_response(404, "parentId does not exist")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))
 
 def is_top_level_comment(parent_id):

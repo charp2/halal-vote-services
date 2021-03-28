@@ -28,7 +28,6 @@ def vote_comment(data: dataType, conn, logger):
         return generate_success_response(vote)
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))
 
 def vote_exists(prev_vote):

@@ -107,11 +107,9 @@ def vote_topic(data: dataType, conn, logger):
                     return generate_success_response(result)
 
             else:
-                conn.rollback()
                 return generate_success_response({'noUpdates': True})
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))
 
 def createSetTopicsQuery(query_set_section, topic_title):

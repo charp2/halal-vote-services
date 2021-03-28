@@ -33,5 +33,4 @@ def add_topic(data: dataType, conn, logger):
                 return generate_error_response(409, "Topic already exists")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

@@ -35,5 +35,4 @@ def see_media(data: dataType, request_headers: any, conn, logger):
                     return generate_success_response('already seen')
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

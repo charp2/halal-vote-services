@@ -41,5 +41,4 @@ def logout(data: dataType, session_token, conn, logger):
                 return generate_success_response("Already logged out")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

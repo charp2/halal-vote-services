@@ -60,5 +60,4 @@ def send_forgot_password_email(email: str, conn, logger):
             return generate_success_response("Successfully sent password reset email")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, "There was an error")

@@ -29,9 +29,7 @@ def delete_topic_image(data: dataType, conn, logger):
                 conn.commit()
                 return generate_success_response("Removed topic image %d" %(image_id))
             else:
-                conn.rollback()
                 return generate_error_response(404, "Topic image not found")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

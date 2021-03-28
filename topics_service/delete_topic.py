@@ -78,9 +78,7 @@ def delete_topic(data: dataType, conn, logger):
                 return generate_success_response("Removed topic '%s'" %(topic_title))
 
             else:
-                conn.rollback()
                 return generate_error_response(404, "Topic not found")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

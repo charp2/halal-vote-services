@@ -79,7 +79,6 @@ def register_user(data: dataType, conn, logger):
             conn.commit()
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, "There was an error")
 
     return generate_success_response(username)

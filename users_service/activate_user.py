@@ -31,5 +31,4 @@ def activate_user(username: str, activation_value: str, conn, logger):
                 return generate_success_response("%s is already ACTIVE!" %(username))
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))

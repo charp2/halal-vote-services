@@ -31,7 +31,6 @@ def add_topic_image(data: addTopicDataType, conn, logger):
                 return generate_error_response(404, "Topic not found")
 
     except Exception as e:
-        conn.rollback()
         return generate_error_response(500, str(e))
 
 
