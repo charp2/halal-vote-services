@@ -114,7 +114,7 @@ def is_session_expired(session_timestamp):
 
 def should_session_refresh(session_timestamp):
     current_timestamp = generate_timestamp()
-    return (session_timestamp + timedelta(weeks=1)) < current_timestamp < (session_timestamp + timedelta(weeks=2))
+    return (session_timestamp + timedelta(days=1)) < current_timestamp < (session_timestamp + timedelta(weeks=2))
 
 def get_response_headers():
     return response_headers
