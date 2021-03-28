@@ -75,6 +75,26 @@ def valid_user(username: str, session_token: str, conn, logger, isSuperUser: boo
     except Exception as e:
         return generate_error_response(500, str(e))
 
+def refresh_user(username: str, session_token: str, conn, logger):
+    if not username or not session_token:
+        return
+    
+    try:
+        with conn.cursor() as cur:
+            cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': username})
+            results = cur.fetchone()
+
+            if results:
+                retrieved_session_token, session_timestamp, active_status = results
+
+                if active_status == "ACTIVE" and session_token == retrieved_session_token and should_session_refresh(session_timestamp):
+                    refreshed_session_timestamp = generate_timestamp()
+                    cur.execute("update Users set sessionTimestamp=%(sessionTimestamp)s where username=%(username)s", {"sessionTimestamp": refreshed_session_timestamp, "username": username})
+                    conn.commit()
+
+    except Exception as e:
+        return
+
 def generate_error_response(status_code: int, error_msg: str):
     logger.error(error_msg)
     return status_code, json.dumps({ 'message': error_msg }, default=str)
@@ -90,7 +110,11 @@ def generate_timestamp():
 
 def is_session_expired(session_timestamp):
     current_timestamp = generate_timestamp()
-    return session_timestamp < (current_timestamp - timedelta(hours=24))
+    return session_timestamp < (current_timestamp - timedelta(weeks=2))
+
+def should_session_refresh(session_timestamp):
+    current_timestamp = generate_timestamp()
+    return (session_timestamp + timedelta(weeks=1)) < current_timestamp < (session_timestamp + timedelta(weeks=2))
 
 def get_response_headers():
     return response_headers
