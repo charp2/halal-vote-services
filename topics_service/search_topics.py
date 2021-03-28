@@ -28,6 +28,7 @@ def search_topics(data: dataType, conn, logger):
             cur.execute(query, query_map)
 
             result = cur.fetchall()
+            conn.commit()
             return generate_success_response(result)
 
     except Exception as e:
