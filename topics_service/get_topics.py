@@ -74,6 +74,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
             cur.execute(query, query_map)
 
             result = cur.fetchall()
+            conn.commit()
             return generate_success_response(result)
 
     except Exception as e:

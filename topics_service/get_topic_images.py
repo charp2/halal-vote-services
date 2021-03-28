@@ -39,6 +39,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
 
                 cur.execute(query, query_map)
                 result = cur.fetchall()
+                conn.commit()
                 excluded_ids.append(single_image_id)
 
             if username != None:
@@ -90,6 +91,7 @@ def get_topic_images(data: dataType, request_headers: any, conn, logger):
             cur.execute(query, query_map)
 
             result += cur.fetchall()
+            conn.commit()
             return generate_success_response(result)
 
     except Exception as e:

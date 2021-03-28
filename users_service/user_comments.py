@@ -31,6 +31,7 @@ def user_comments(data: dataType, request_headers: any, conn, logger):
                 query_map = {'username': username, 'offset': offset, 'n': n}
                 cur.execute(query, query_map)
                 result = cur.fetchall()
+                conn.commit()
                 return generate_success_response(result)
 
     except Exception as e:

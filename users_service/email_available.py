@@ -20,6 +20,7 @@ def email_available(data: dataType, conn, logger):
             ''', {'email': email})
 
             results = cur.fetchall()
+            conn.commit()
 
             if results:
                 return generate_success_response({"available": False})

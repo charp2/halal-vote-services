@@ -134,6 +134,7 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
         cur.execute(query, query_map)
         logger.info(cur._last_executed)
         top_rated_result = cur.fetchall()
+        conn.commit()
 
         return top_rated_result
 
@@ -164,7 +165,9 @@ def fetch_relevant_comments(conn, comment_ids, requestors_username: str = None, 
                 ''',
                 { 'commentIds': comment_ids, 'requestorsUsername': requestors_username }
             )
-        return cur.fetchall()
+        results = cur.fetchall()
+        conn.commit()
+        return results
 
 def make_comments_object(rows):
     comments_object = {}

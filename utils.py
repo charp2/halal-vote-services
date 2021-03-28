@@ -57,6 +57,7 @@ def valid_user(username: str, session_token: str, conn, logger, isSuperUser: boo
         with conn.cursor() as cur:
             cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': superUserName if isSuperUser else username})
             results = cur.fetchone()
+            conn.commit()
 
             if results:
                 retrieved_session_token, session_timestamp, active_status = results
@@ -83,6 +84,7 @@ def refresh_user(username: str, session_token: str, conn, logger):
         with conn.cursor() as cur:
             cur.execute("select sessionToken, sessionTimestamp, activeStatus from Users where username=%(username)s", {'username': username})
             results = cur.fetchone()
+            conn.commit()
 
             if results:
                 retrieved_session_token, session_timestamp, active_status = results

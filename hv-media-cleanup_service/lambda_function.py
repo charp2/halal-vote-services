@@ -71,6 +71,7 @@ def get_living_media():
 
         cur.execute(query, query_map)
         result = cur.fetchall()
+        conn.commit()
 
         livingMedia = set()
         for row in result:

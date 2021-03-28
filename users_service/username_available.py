@@ -19,6 +19,7 @@ def username_available(data: dataType, conn, logger):
             ''', {'username': username})
 
             results = cur.fetchall()
+            conn.commit()
 
             if results:
                 return generate_success_response({"available": False})

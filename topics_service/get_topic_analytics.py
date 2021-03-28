@@ -37,6 +37,7 @@ def get_topic_analytics(data: dataType, conn, logger):
                 ORDER BY voteTime ASC
             ''', {'topicTitle': topic_title})
             vote_history = cur.fetchall()
+            conn.commit()
 
             if vote_history and len(vote_history) > 0:
                 start_time = get_time_floor(vote_history[0]["voteTime"])
