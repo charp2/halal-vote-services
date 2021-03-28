@@ -19,6 +19,7 @@ from topics_service.update_topic_image_like import update_topic_image_like
 from topics_service.get_topic_analytics import get_topic_analytics
 from utils import valid_user
 from utils import get_response_headers
+from utils import refresh_user
 
 # rds settings
 rds_host  = os.environ["DB_HOST"]
@@ -70,6 +71,8 @@ def handler(event: eventType, context):
 
         if status_code != 200:
             return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
+
+    refresh_user(requestHeaders.get('refreshusername'), requestHeaders.get('refreshsessiontoken'), conn, logger)
 
     if (path == '/add-topic'):
         responseStatus, responseBody = add_topic(requestBody, conn, logger)

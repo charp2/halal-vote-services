@@ -25,6 +25,7 @@ from users_service.username_available import username_available
 from users_service.email_available import email_available
 from utils import valid_user
 from utils import get_response_headers
+from utils import refresh_user
 
 # rds settings
 rds_host  = os.environ["DB_HOST"]
@@ -87,6 +88,8 @@ def handler(event: eventType, context):
             status_code, msg = valid_user(requestParams.get('username'), requestHeaders.get('sessiontoken'), conn, logger, requestHeaders.get('issuperuser') == "true")
             if status_code != 200:
                 return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
+    
+    refresh_user(requestHeaders.get('refreshusername'), requestHeaders.get('refreshsessiontoken'), conn, logger)
 
     if path == '/register-user':
         responseStatus, responseBody = register_user(requestParams, conn, logger)

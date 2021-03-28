@@ -12,6 +12,7 @@ from comments_service.get_comments import get_comments
 from comments_service.delete_comment import delete_comment
 from utils import valid_user
 from utils import get_response_headers
+from utils import refresh_user
 
 # rds settings
 rds_host  = os.environ["DB_HOST"]
@@ -61,6 +62,8 @@ def handler(event: eventType, context):
 
         if status_code != 200:
             return {'statusCode': status_code, 'body': msg, 'headers': get_response_headers()}
+
+    refresh_user(requestHeaders.get('refreshusername'), requestHeaders.get('refreshsessiontoken'), conn, logger)
 
     if (path == '/add-comment'):
         responseStatus, responseBody = add_comment(requestBody, conn, logger)
