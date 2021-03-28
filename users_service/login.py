@@ -52,7 +52,7 @@ def login(data: dataType, ip_address: str, conn, logger):
                             query_params["lastLatitude"] = location["latitude"]
                             query_params["lastLongitude"] = location["longitude"]
 
-                    query_string += " where username=%(username)s"
+                    query_string += " where username=%(username)s or email=%(username)s"
                     cur.execute(query_string, query_params)
                 else:
                     if is_ip_updated:
