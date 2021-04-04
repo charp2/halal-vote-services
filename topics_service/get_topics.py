@@ -8,8 +8,12 @@ from utils import generate_error_response
 from utils import generate_success_response
 from utils import valid_user
 
-sort_query = '''
+sort_query_popular = '''
     order by (POWER(T.numVotes, 1/2)*2 + POWER(T.numComments, 1/3)*4 + POWER(T.mediaLikes, 1/2)*5) desc, T.timeStamp desc
+'''
+
+sort_query_new = '''
+    order by T.timeStamp desc
 '''
 
 dataType = {
@@ -66,7 +70,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
 
             query = '''select * from (''' + query + '''
             group by Topics.topicTitle) as T
-            ''' + sort_query + '''
+            ''' + (sort_query_popular if username != None else sort_query_new) + '''
             limit %(offset)s, %(n)s'''
             query_map['offset'] = offset
             query_map['n'] = n
