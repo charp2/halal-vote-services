@@ -8,12 +8,8 @@ from utils import generate_error_response
 from utils import generate_success_response
 from utils import valid_user
 
-sort_query_popular = '''
-    order by (POWER(T.numVotes, 1/2)*2 + POWER(T.numComments, 1/3)*4 + POWER(T.mediaLikes, 1/2)*5) desc, T.timeStamp desc
-'''
-
-sort_query_new = '''
-    order by T.timeStamp desc
+sort_query = '''
+    order by Date(T.timeStamp) desc, (POWER(T.numVotes, 1/2)*2 + POWER(T.numComments, 1/3)*4 + POWER(T.mediaLikes, 1/2)*5) desc
 '''
 
 dataType = {
@@ -67,19 +63,34 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['topicTitles']  = topic_titles
 
-
             query = '''select * from (''' + query + '''
-            group by Topics.topicTitle) as T
-            ''' + (sort_query_popular if username != None else sort_query_new) + '''
-            limit %(offset)s, %(n)s'''
+                group by Topics.topicTitle) as T
+            '''
+            media_likes_exclusive_query = query + '''
+                where T.mediaLikes <> 0
+            '''
+
+            query = add_sorting_to_query(query, sort_query)
+            media_likes_exclusive_query = add_sorting_to_query(media_likes_exclusive_query, sort_query)
+
             query_map['offset'] = offset
             query_map['n'] = n
 
-            cur.execute(query, query_map)
-
+            cur.execute(media_likes_exclusive_query, query_map)
             result = cur.fetchall()
             conn.commit()
+
+            if len(result) == 0:
+                cur.execute(query, query_map)
+                result = cur.fetchall()
+                conn.commit()
+
             return generate_success_response(result)
 
     except Exception as e:
         return generate_error_response(500, str(e))
+
+def add_sorting_to_query(query, sort_query):
+    return query + sort_query + '''
+        limit %(offset)s, %(n)s
+    '''
