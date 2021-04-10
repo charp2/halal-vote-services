@@ -44,7 +44,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.mediaId IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.mediaId IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes, (CASE WHEN UserSeenMedia.mediaId IS NOT NULL THEN 1 ELSE 0 END) as userSeen
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                     left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
                     left join UserSeenMedia on TopicImages.id = UserSeenMedia.mediaId and UserSeenMedia.username = %(username)s
@@ -66,24 +66,28 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
             query = '''select * from (''' + query + '''
                 group by Topics.topicTitle) as T
             '''
-            media_likes_exclusive_query = query + '''
-                where T.mediaLikes <> 0
-            '''
+
+            if username != None:
+                user_seen_exclusive_query = query + '''
+                    where T.userSeen = 0
+                '''
 
             query = add_sorting_to_query(query, sort_query)
-            media_likes_exclusive_query = add_sorting_to_query(media_likes_exclusive_query, sort_query)
+
+            if username != None:
+                user_seen_exclusive_query = add_sorting_to_query(user_seen_exclusive_query, sort_query)
 
             query_map['offset'] = offset
             query_map['n'] = n
 
-            cur.execute(media_likes_exclusive_query, query_map)
-            result = cur.fetchall()
-            conn.commit()
+            if username != None:
+                result = execute_query(conn, cur, user_seen_exclusive_query, query_map)
 
-            if len(result) == 0:
-                cur.execute(query, query_map)
-                result = cur.fetchall()
-                conn.commit()
+                if len(result) == 0:
+                    result = execute_query(conn, cur, query, query_map)
+
+            else:
+                result = execute_query(conn, cur, query, query_map)
 
             return generate_success_response(result)
 
@@ -94,3 +98,9 @@ def add_sorting_to_query(query, sort_query):
     return query + sort_query + '''
         limit %(offset)s, %(n)s
     '''
+
+def execute_query(conn, cur, query, query_map):
+    cur.execute(query, query_map)
+    result = cur.fetchall()
+    conn.commit()
+    return result
