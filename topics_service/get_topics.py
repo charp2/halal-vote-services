@@ -89,6 +89,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
             else:
                 result = execute_query(conn, cur, query, query_map)
 
+            conn.commit()
             return generate_success_response(result)
 
     except Exception as e:
@@ -102,5 +103,4 @@ def add_sorting_to_query(query, sort_query):
 def execute_query(conn, cur, query, query_map):
     cur.execute(query, query_map)
     result = cur.fetchall()
-    conn.commit()
     return result
