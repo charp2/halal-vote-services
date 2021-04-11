@@ -44,7 +44,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                     return generate_error_response(status_code, msg)
 
                 query = '''
-                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.mediaId IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes, (CASE WHEN UserSeenMedia.mediaId IS NOT NULL THEN 1 ELSE 0 END) as userSeen
+                    select Topics.*, IFNULL(UserTopicVotes.vote, 0) as vote, SUM(CASE WHEN TopicImages.id IS NULL OR UserSeenMedia.mediaId IS NOT NULL THEN 0 ELSE TopicImages.likes+1 END) as mediaLikes, (CASE WHEN UserSeenMedia.mediaId IS NULL OR Topics.topicTitle in %(topicTitles)s THEN 0 ELSE 1 END) as userSeen
                     from Topics left join UserTopicVotes on Topics.topicTitle = UserTopicVotes.topicTitle and UserTopicVotes.username = %(username)s and UserTopicVotes.current = true
                     left join TopicImages on Topics.topicTitle = TopicImages.topicTitle
                     left join UserSeenMedia on TopicImages.id = UserSeenMedia.mediaId and UserSeenMedia.username = %(username)s
@@ -57,6 +57,7 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 '''
                 query_map['excludedTopics'] = excluded_topics
 
+            query_map['topicTitles'] = ['']
             if topic_titles and not excluded_topics:
                 query = query + '''
                     where Topics.topicTitle in %(topicTitles)s
@@ -90,6 +91,8 @@ def get_topics(data: dataType, request_headers: any, conn, logger):
                 result = execute_query(conn, cur, query, query_map)
 
             conn.commit()
+            # logger.info(cur._last_executed)
+            # print(cur._last_executed)
             return generate_success_response(result)
 
     except Exception as e:

@@ -132,7 +132,7 @@ def fetch_comments(conn, topic_title, comment_type, start_depth, end_depth, n, e
         '''
 
         cur.execute(query, query_map)
-        logger.info(cur._last_executed)
+        # logger.info(cur._last_executed)
         top_rated_result = cur.fetchall()
         conn.commit()
 
