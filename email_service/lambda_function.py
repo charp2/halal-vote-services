@@ -11,7 +11,7 @@ def handler(event, context):
         ses = boto3.client('ses')
     
         ses.send_email(
-            Source='mail@halalvote.com',
+            Source='Halal Vote <mail@halalvote.com>',
             Destination={
                 'ToAddresses': [
                     email
