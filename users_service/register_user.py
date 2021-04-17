@@ -62,41 +62,7 @@ def register_user(data: dataType, conn, logger):
             message = {
                 "email": email,
                 "subject": "halalvote.com Account Activation",
-                "body": '''<div style="width: 100%; height: 100vh; background-color: #181818; display:flex; align-items: center; justify-content: center; font-family: verdana, arial, helvetica, sans-serif;">
-                    <div style="border: 2px #414141 solid; border-radius: 25px; width: 600px; text-align: center; background-color: #2a2a2a">
-                    
-                    <table style="width: 100%">
-                    
-                        <thead>
-                        <tr>
-                            <th style="font-size: 35px; font-family: verdana, arial, helvetica, sans-serif"><span style="color: #8756ad">H</span><span style="color: #57998e">V</span></th>
-                        </tr>
-                        </thead>
-                        
-                        <tr>
-                        <tr>
-                            <td>
-                            <div style="font-size: 20px">
-                                <span style="color: rgb(197, 197, 197)">Activate your account:</span>
-                                
-                                <br>
-                                <button style="margin: 20px 0 20px 0; font-size: 25px; width: 5em;
-                    padding: 6px;
-                    border-radius: 24px;
-                    color: rgb(197, 197, 197);
-                    background-color: #414141;
-                    border: none;
-                    outline: none;
-                    font-size: 25px;"><a target="_blank" style="text-decoration: none; color: rgb(197, 197, 197);" href='%s?loginScreen=loadingActivation&username=%s&activationValue=%s'>Activate</a></button>
-                                </div>
-                        </tb>
-                        </tr>
-                        </tr>
-                        
-                    </table>
-                    
-                    </div>
-                    </div>''' %(hyperlink_base_url, username, activation_value)
+                "body": '<div style="width: 100%; height: 100vh; background-color: #181818; display:flex; align-items: center; justify-content: center; font-family: verdana, arial, helvetica, sans-serif;"><div style="border: 2px #414141 solid; border-radius: 25px; width: 600px; text-align: center; background-color: #2a2a2a"><table style="width: 100%"><thead><tr><th style="font-size: 35px; font-family: verdana, arial, helvetica, sans-serif"><span style="color: #8756ad">H</span><span style="color: #57998e">V</span></th></tr></thead><tr><tr><td><div style="font-size: 20px"><span style="color: rgb(197, 197, 197)">Activate your account:</span><br><button style="margin: 20px 0 20px 0; font-size: 25px; width: 5em;padding: 6px;border-radius: 24px;color: rgb(197, 197, 197);background-color: #414141;border: none;outline: none;font-size: 25px;"><a target="_blank" style="text-decoration: none; color: rgb(197, 197, 197);" href="%s?loginScreen=loadingActivation&username=%s&activationValue=%s">Activate</a></button></div></tb></tr></tr></table></div></div>' %(hyperlink_base_url, username, activation_value)
             }
 
             send_email_topic_arn = os.environ["SEND_EMAIL_TOPIC_ARN"]
